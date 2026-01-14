@@ -15,20 +15,29 @@ public class ClasseController {
 
     @GetMapping
     public String findAll(Model model) {
+        model.addAttribute("activePage", "classes");
         model.addAttribute("classes", service.findAll());
         return "classe/list";
     }
 
-    @PostMapping
+    @GetMapping("/create")
+    public String createForm(Model model) {
+        model.addAttribute("activePage", "classes");
+        model.addAttribute("classe", new Classe());
+        return "classe/create";
+    }
+
+    @GetMapping("/edit/{id}")
+    public String editForm(@PathVariable Integer id, Model model) {
+        model.addAttribute("activePage", "classes");
+        model.addAttribute("classe", service.findById(id).orElseThrow());
+        return "classe/create";
+    }
+
+    @PostMapping("/save")
     public String save(@ModelAttribute Classe entity) {
         service.save(entity);
         return "redirect:/classes";
-    }
-
-    @GetMapping("/{id}")
-    public String findById(@PathVariable Integer id, Model model) {
-        model.addAttribute("classe", service.findById(id).orElse(null));
-        return "classe/details";
     }
 
     @GetMapping("/{id}/delete")

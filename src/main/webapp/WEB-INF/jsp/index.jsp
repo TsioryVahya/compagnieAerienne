@@ -1,4 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <jsp:include page="common/header.jsp" />
 
 <body class="h-screen flex overflow-hidden bg-gray-50">
@@ -56,9 +58,9 @@
                                 </svg>
                             </span>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900">124</div>
+                        <div class="text-2xl font-bold text-gray-900">${volsAujourdhui}</div>
                         <p class="text-xs text-green-600 mt-1 flex items-center">
-                            <span class="font-bold mr-1">+12%</span> depuis hier
+                            Actuel aujourd'hui
                         </p>
                     </div>
 
@@ -72,7 +74,9 @@
                                 </svg>
                             </span>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900">14,203</div>
+                        <div class="text-2xl font-bold text-gray-900">
+                            <fmt:formatNumber value="${passagersMois}" type="number" />
+                        </div>
                         <p class="text-xs text-gray-500 mt-1">Actuels ce mois</p>
                     </div>
 
@@ -86,8 +90,10 @@
                                 </svg>
                             </span>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900">$45.2k</div>
-                        <p class="text-xs text-green-600 mt-1 font-bold">+2.4%</p>
+                        <div class="text-2xl font-bold text-gray-900">
+                            <fmt:formatNumber value="${revenusMois}" type="currency" currencySymbol="$" />
+                        </div>
+                        <p class="text-xs text-green-600 mt-1 font-bold">Ce mois-ci</p>
                     </div>
 
                     <!-- Stat Card 4 -->
@@ -100,15 +106,16 @@
                                 </svg>
                             </span>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900">3</div>
+                        <div class="text-2xl font-bold text-gray-900">${retards}</div>
                         <p class="text-xs text-red-600 mt-1">Attention requise</p>
                     </div>
                 </div>
 
-                <!-- Recent Flights Table Example -->
+                <!-- Recent Flights Table -->
                  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                         <h3 class="text-lg font-medium text-gray-900">Vols Récents</h3>
+                        <a href="${pageContext.request.contextPath}/vol-programmation" class="text-sm font-medium text-brand-600 hover:text-brand-700">Voir tout</a>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-left text-sm whitespace-nowrap">
@@ -122,38 +129,36 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 border-t border-gray-100">
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-brand-600">AF-203</td>
-                                    <td class="px-6 py-3">Paris (CDG)</td>
-                                    <td class="px-6 py-3">10:30 AM</td>
-                                    <td class="px-6 py-3">
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-600">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-green-600"></span>
-                                            A l'heure
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-3 text-gray-500 hover:text-gray-700 cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                        </svg>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-brand-600">MD-802</td>
-                                    <td class="px-6 py-3">Madrid (MAD)</td>
-                                    <td class="px-6 py-3">11:45 AM</td>
-                                    <td class="px-6 py-3">
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-1 text-xs font-semibold text-yellow-600">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-yellow-600"></span>
-                                            Retardé
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-3 text-gray-500 hover:text-gray-700 cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                        </svg>
-                                    </td>
-                                </tr>
+                                <c:forEach items="${volsRecents}" var="prog">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-3 font-medium text-brand-600">${prog.vol.numeroVol}</td>
+                                        <td class="px-6 py-3">${prog.vol.aeroportArrivee.nom} (${prog.vol.aeroportArrivee.code})</td>
+                                        <td class="px-6 py-3">
+                                            <fmt:parseDate value="${prog.dateHeure}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDate" type="both" />
+                                            <fmt:formatDate value="${parsedDate}" pattern="HH:mm" />
+                                        </td>
+                                        <td class="px-6 py-3">
+                                            <c:set var="statut" value="${statusMap[prog.id]}" />
+                                            <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold 
+                                                ${statut == 'A l\'heure' || statut == 'En cours' ? 'bg-green-50 text-green-600' : 
+                                                  statut == 'Retardé' ? 'bg-orange-50 text-orange-600' : 
+                                                  statut == 'Annulé' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'}">
+                                                <span class="h-1.5 w-1.5 rounded-full 
+                                                    ${statut == 'A l\'heure' || statut == 'En cours' ? 'bg-green-600' : 
+                                                      statut == 'Retardé' ? 'bg-orange-600' : 
+                                                      statut == 'Annulé' ? 'bg-red-600' : 'bg-gray-600'}"></span>
+                                                ${statut}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-3 text-gray-500 hover:text-gray-700">
+                                            <a href="${pageContext.request.contextPath}/vol-programmation/details/${prog.id}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                                </svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
                             </tbody>
                         </table>
                     </div>

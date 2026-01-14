@@ -112,6 +112,19 @@
                             </div>
                         </div>
 
+                        <!-- Statut de la Programmation (visible uniquement en édition) -->
+                        <c:if test="${programmation.id != null}">
+                            <div class="border-t border-gray-100 pt-6">
+                                <label for="statutId" class="block text-sm font-medium text-gray-700 mb-2">Statut de la Programmation</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" id="statutId" name="statutId">
+                                    <c:forEach items="${allStatuts}" var="statut">
+                                        <option value="${statut.id}" ${currentStatut.id == statut.id ? 'selected' : ''}>${statut.nom}</option>
+                                    </c:forEach>
+                                </select>
+                                <p class="mt-1 text-sm text-gray-500">Modifier le statut de cette programmation de vol.</p>
+                            </div>
+                        </c:if>
+
                         <!-- Actions -->
                         <div class="flex gap-3 pt-4">
                             <button type="submit" class="bg-brand-600 text-white px-6 py-2 rounded-md hover:bg-brand-700 shadow-sm transition-colors text-sm font-medium">

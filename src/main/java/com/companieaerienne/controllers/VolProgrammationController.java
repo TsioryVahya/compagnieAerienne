@@ -47,6 +47,9 @@ public class VolProgrammationController {
     @Autowired
     private com.companieaerienne.services.StatutVolService statutVolService;
 
+    @Autowired
+    private com.companieaerienne.services.AvionService avionService;
+
     @GetMapping
     public String list(@RequestParam(required = false) String depart,
                       @RequestParam(required = false) String arrivee,
@@ -71,7 +74,7 @@ public class VolProgrammationController {
         List<com.companieaerienne.entities.VolProgrammationStatut> allStatutHistory = volProgrammationStatutService.findAll();
 
         for (VolProgrammation p : programmations) {
-            revenues.put(p.getId(), calculateRevenue(p));
+            revenues.put(p.getId(), volProgrammationService.calculateRevenue(p));
             
             // Trouver le statut le plus récent
             allStatutHistory.stream()
@@ -85,37 +88,6 @@ public class VolProgrammationController {
         model.addAttribute("currentStatuts", currentStatuts);
         model.addAttribute("activePage", "programmation");
         return "vol-programmation/list";
-    }
-
-    private BigDecimal calculateRevenue(VolProgrammation programmation) {
-        if (programmation.getReservations() == null || programmation.getTarifs() == null) return BigDecimal.ZERO;
-        
-        List<ClassePlace> configurations = classePlaceService.findByAvion(programmation.getAvion().getId());
-        BigDecimal total = BigDecimal.ZERO;
-        
-        for (com.companieaerienne.entities.Reservation res : programmation.getReservations()) {
-            if (res.getPlacesSelectionnees() == null || res.getPlacesSelectionnees().isEmpty()) continue;
-            
-            for (Integer seatNum : res.getPlacesSelectionnees()) {
-                // Déterminer la classe de ce siège
-                Integer classeId = configurations.stream()
-                    .filter(cp -> seatNum >= cp.getPlaceDebut() && seatNum <= cp.getPlaceFin())
-                    .map(cp -> cp.getClasse().getId())
-                    .findFirst()
-                    .orElse(null);
-                
-                if (classeId != null) {
-                    BigDecimal tarif = programmation.getTarifs().stream()
-                        .filter(t -> t.getClasse().getId().equals(classeId))
-                        .map(TarifVol::getTarif)
-                        .findFirst()
-                        .orElse(BigDecimal.ZERO);
-                    
-                    total = total.add(tarif);
-                }
-            }
-        }
-        return total;
     }
 
     @GetMapping("/details/{id}")
@@ -135,7 +107,6 @@ public class VolProgrammationController {
         
         Map<Integer, List<Integer>> availableSeatsByClasse = new HashMap<>();
         Map<Integer, Integer> occupiedCountByClasse = new HashMap<>();
-        BigDecimal totalRevenue = BigDecimal.ZERO;
         
         for (ClassePlace cp : configurations) {
             List<Integer> available = new ArrayList<>();
@@ -149,16 +120,10 @@ public class VolProgrammationController {
             }
             availableSeatsByClasse.put(cp.getClasse().getId(), available);
             occupiedCountByClasse.put(cp.getClasse().getId(), count);
-            
-            // Calculer le chiffre d'affaires pour cette classe
-            Optional<TarifVol> tarifOpt = programmation.getTarifs().stream()
-                    .filter(t -> t.getClasse().getId().equals(cp.getClasse().getId()))
-                    .findFirst();
-            if (tarifOpt.isPresent()) {
-                BigDecimal classRevenue = tarifOpt.get().getTarif().multiply(new BigDecimal(count));
-                totalRevenue = totalRevenue.add(classRevenue);
-            }
         }
+
+        // Calculer le chiffre d'affaires
+        BigDecimal totalRevenue = volProgrammationService.calculateRevenue(programmation);
 
         // Trouver le statut actuel
         List<com.companieaerienne.entities.VolProgrammationStatut> allStatutHistory = volProgrammationStatutService.findAll();
@@ -178,9 +143,6 @@ public class VolProgrammationController {
         model.addAttribute("activePage", "programmation");
         return "vol-programmation/details";
     }
-
-    @Autowired
-    private com.companieaerienne.services.AvionService avionService;
 
     @GetMapping("/create")
     public String createForm(Model model) {
@@ -205,13 +167,22 @@ public class VolProgrammationController {
         tarifs.forEach(t -> {
             model.addAttribute("tarif_" + t.getClasse().getId(), t.getTarif());
         });
+
+        // Charger le statut actuel
+        List<com.companieaerienne.entities.VolProgrammationStatut> allStatutHistory = volProgrammationStatutService.findAll();
+        allStatutHistory.stream()
+            .filter(s -> s.getVolProgrammation().getId().equals(programmation.getId()))
+            .max(Comparator.comparing(com.companieaerienne.entities.VolProgrammationStatut::getDate))
+            .ifPresent(s -> model.addAttribute("currentStatut", s.getStatut()));
         
+        model.addAttribute("allStatuts", statutVolService.findAll());
         model.addAttribute("activePage", "programmation");
         return "vol-programmation/create";
     }
 
     @PostMapping("/save")
     public String save(@ModelAttribute VolProgrammation programmation, @RequestParam Map<String, String> allParams) {
+        boolean isNew = programmation.getId() == null;
         VolProgrammation savedProg = volProgrammationService.save(programmation);
         
         // Enregistrer les tarifs pour chaque classe
@@ -230,6 +201,39 @@ public class VolProgrammationController {
                 }
             }
         });
+
+        // Gérer le statut
+        if (isNew) {
+            // Pour une nouvelle programmation, mettre le statut "En cours" par défaut
+            statutVolService.findAll().stream()
+                .filter(s -> s.getNom().equalsIgnoreCase("En cours"))
+                .findFirst()
+                .ifPresent(statut -> {
+                    com.companieaerienne.entities.VolProgrammationStatut vps = new com.companieaerienne.entities.VolProgrammationStatut();
+                    vps.setVolProgrammation(savedProg);
+                    vps.setStatut(statut);
+                    volProgrammationStatutService.save(vps);
+                });
+        } else if (allParams.containsKey("statutId")) {
+            // Pour une modification, mettre à jour le statut si fourni
+            Integer statutId = Integer.parseInt(allParams.get("statutId"));
+            statutVolService.findById(statutId).ifPresent(statut -> {
+                // Vérifier si le statut a changé par rapport au dernier
+                List<com.companieaerienne.entities.VolProgrammationStatut> history = volProgrammationStatutService.findAll();
+                boolean changed = history.stream()
+                    .filter(s -> s.getVolProgrammation().getId().equals(savedProg.getId()))
+                    .max(Comparator.comparing(com.companieaerienne.entities.VolProgrammationStatut::getDate))
+                    .map(s -> !s.getStatut().getId().equals(statut.getId()))
+                    .orElse(true);
+
+                if (changed) {
+                    com.companieaerienne.entities.VolProgrammationStatut vps = new com.companieaerienne.entities.VolProgrammationStatut();
+                    vps.setVolProgrammation(savedProg);
+                    vps.setStatut(statut);
+                    volProgrammationStatutService.save(vps);
+                }
+            });
+        }
 
         return "redirect:/vol-programmation";
     }
