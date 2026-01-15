@@ -256,14 +256,15 @@
                                 <div class="pt-6 border-t border-gray-200">
                                     <div class="text-xs text-gray-400 uppercase font-semibold mb-4">Répartition par Classe</div>
                                     <div class="space-y-4">
-                                        <c:forEach items="${tarifs}" var="t">
-                                            <c:set var="classCount" value="${occupiedCountByClasse[t.classe.id]}" />
-                                            <c:set var="classRevenue" value="${classCount * t.tarif}" />
+                                        <c:forEach items="${configurations}" var="conf">
+                                            <c:set var="t_tarif" value="${tariffsByClasse[conf.classe.id]}" />
+                                            <c:set var="classCount" value="${occupiedCountByClasse[conf.classe.id]}" />
+                                            <c:set var="classRevenue" value="${classCount * t_tarif}" />
                                             
                                             <div class="flex justify-between items-end">
                                                 <div>
-                                                    <div class="text-sm font-medium text-gray-900">${t.classe.nom}</div>
-                                                    <div class="text-xs text-gray-500">${classCount} places vendues à <fmt:formatNumber value="${t.tarif}" type="currency" currencySymbol="Ar" /></div>
+                                                    <div class="text-sm font-medium text-gray-900">${conf.classe.nom}</div>
+                                                    <div class="text-xs text-gray-500">${classCount} places vendues à <fmt:formatNumber value="${t_tarif}" type="currency" currencySymbol="Ar" /></div>
                                                 </div>
                                                 <div class="text-sm font-bold text-gray-900">
                                                     <fmt:formatNumber value="${classRevenue}" type="currency" currencySymbol="Ar" />
@@ -303,11 +304,11 @@
                                 <h2 class="text-lg font-bold text-gray-900">Places Disponibles</h2>
                             </div>
                             <div class="p-6 space-y-6">
-                                <c:forEach items="${tarifs}" var="t">
-                                    <c:set var="classAvailable" value="${availableSeats[t.classe.id]}" />
+                                <c:forEach items="${configurations}" var="conf">
+                                    <c:set var="classAvailable" value="${availableSeats[conf.classe.id]}" />
                                     <div>
                                         <div class="flex justify-between items-center mb-3">
-                                            <span class="text-sm font-bold text-gray-900">${t.classe.nom}</span>
+                                            <span class="text-sm font-bold text-gray-900">${conf.classe.nom}</span>
                                             <span class="text-xs font-bold px-2.5 py-1 bg-green-100 text-green-700 rounded-full border border-green-200">
                                                 ${classAvailable.size()} libres
                                             </span>

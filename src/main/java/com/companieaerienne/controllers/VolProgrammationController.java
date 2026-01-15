@@ -208,12 +208,20 @@ public class VolProgrammationController {
         VolProgrammation savedProg = volProgrammationService.save(programmation);
         
         // Enregistrer les tarifs pour chaque classe
+        List<TarifVol> existingTarifs = tarifVolService.findByVolProgrammationId(savedProg.getId());
+        
         classeService.findAll().forEach(classe -> {
             String tarifKey = "tarif_" + classe.getId();
             if (allParams.containsKey(tarifKey)) {
                 try {
                     BigDecimal tarifValue = new BigDecimal(allParams.get(tarifKey));
-                    TarifVol tarif = new TarifVol();
+                    
+                    // Chercher si un tarif existe déjà pour cette classe
+                    TarifVol tarif = existingTarifs.stream()
+                        .filter(t -> t.getClasse().getId().equals(classe.getId()))
+                        .findFirst()
+                        .orElse(new TarifVol());
+                    
                     tarif.setVolProgrammation(savedProg);
                     tarif.setClasse(classe);
                     tarif.setTarif(tarifValue);
