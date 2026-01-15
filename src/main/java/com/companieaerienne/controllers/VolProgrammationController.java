@@ -125,6 +125,23 @@ public class VolProgrammationController {
         // Calculer le chiffre d'affaires
         BigDecimal totalRevenue = volProgrammationService.calculateRevenue(programmation);
 
+        // Calculer les revenus potentiels par classe et total
+        Map<Integer, BigDecimal> potentialRevenueByClasse = new HashMap<>();
+        BigDecimal totalPotentialRevenue = BigDecimal.ZERO;
+
+        for (ClassePlace cp : configurations) {
+            BigDecimal tarif = programmation.getTarifs().stream()
+                .filter(t -> t.getClasse().getId().equals(cp.getClasse().getId()))
+                .map(TarifVol::getTarif)
+                .findFirst()
+                .orElse(BigDecimal.ZERO);
+            
+            int capacity = cp.getPlaceFin() - cp.getPlaceDebut() + 1;
+            BigDecimal potential = tarif.multiply(new BigDecimal(capacity));
+            potentialRevenueByClasse.put(cp.getClasse().getId(), potential);
+            totalPotentialRevenue = totalPotentialRevenue.add(potential);
+        }
+
         // Trouver le statut actuel
         List<com.companieaerienne.entities.VolProgrammationStatut> allStatutHistory = volProgrammationStatutService.findAll();
         allStatutHistory.stream()
@@ -139,6 +156,8 @@ public class VolProgrammationController {
         model.addAttribute("availableSeats", availableSeatsByClasse);
         model.addAttribute("occupiedCountByClasse", occupiedCountByClasse);
         model.addAttribute("totalRevenue", totalRevenue);
+        model.addAttribute("potentialRevenueByClasse", potentialRevenueByClasse);
+        model.addAttribute("totalPotentialRevenue", totalPotentialRevenue);
         model.addAttribute("allStatuts", statutVolService.findAll());
         model.addAttribute("activePage", "programmation");
         return "vol-programmation/details";
