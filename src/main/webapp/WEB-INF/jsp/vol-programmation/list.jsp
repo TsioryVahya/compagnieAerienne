@@ -3,7 +3,7 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <jsp:include page="../common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-gray-50">
+<body class="h-screen flex overflow-hidden bg-brand-50">
     <!-- Sidebar -->
     <jsp:include page="../common/sidebar.jsp" />
 
@@ -13,17 +13,17 @@
         <jsp:include page="../common/navbar.jsp" />
 
         <!-- Main Page Content -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-brand-50 p-6">
             <div class="container mx-auto max-w-5xl">
                 
                 <!-- Page Header -->
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Programmation des Vols</h1>
+                        <h1 class="text-2xl font-bold text-brand-900 mb-2">Programmation des Vols</h1>
                         <nav class="flex" aria-label="Breadcrumb">
                             <ol class="inline-flex items-center space-x-1 md:space-x-2">
                                 <li class="inline-flex items-center">
-                                    <a href="/" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-brand-600">
+                                    <a href="/" class="inline-flex items-center text-sm font-medium text-brand-600 hover:text-brand-700">
                                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                                         Accueil
                                     </a>
@@ -48,9 +48,9 @@
                 </div>
 
                 <!-- Table Card -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-medium text-gray-900">Vols Programmés</h3>
+                <div class="bg-white rounded-lg shadow-md border border-brand-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-brand-200 flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-brand-900">Vols Programmés</h3>
                         <div class="flex items-center gap-2">
                             <form action="/vol-programmation" method="get" class="flex gap-2">
                                 <input type="text" name="depart" placeholder="Départ..." class="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" value="${param.depart}">
@@ -61,7 +61,7 @@
                     </div>
                     <div class="min-w-full overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-brand-50">
                                 <tr>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Vol
@@ -88,7 +88,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <c:forEach items="${programmations}" var="prog">
-                                    <tr class="hover:bg-gray-50 transition-colors">
+                                    <tr class="hover:bg-brand-50 transition-colors">
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             <div class="text-brand-600 font-bold">
                                                 <a href="/vol-programmation/details/${prog.id}" class="hover:underline">

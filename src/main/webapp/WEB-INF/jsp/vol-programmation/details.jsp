@@ -3,7 +3,7 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <jsp:include page="../common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-gray-50">
+<body class="h-screen flex overflow-hidden bg-brand-50">
     <!-- Sidebar -->
     <jsp:include page="../common/sidebar.jsp" />
 
@@ -13,7 +13,7 @@
         <jsp:include page="../common/navbar.jsp" />
 
         <!-- Main Page Content -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-brand-50 p-6">
             <div class="container mx-auto max-w-7xl">
                 
                 <!-- Page Header with Breadcrumb -->

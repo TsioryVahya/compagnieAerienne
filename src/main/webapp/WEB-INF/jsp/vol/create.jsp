@@ -2,17 +2,17 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="../common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-gray-50">
+<body class="h-screen flex overflow-hidden bg-brand-50">
     <jsp:include page="../common/sidebar.jsp" />
 
     <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300">
         <jsp:include page="../common/navbar.jsp" />
 
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-brand-50 p-6">
             <div class="container mx-auto max-w-2xl">
                 
                 <div class="mb-8">
-                    <h1 class="text-2xl font-bold text-gray-900 mb-2">${vol.id != null ? 'Modifier' : 'Nouveau'} Vol</h1>
+                    <h1 class="text-2xl font-bold text-brand-900 mb-2">${vol.id != null ? 'Modifier' : 'Nouveau'} Vol</h1>
                     <nav class="flex" aria-label="Breadcrumb">
                         <ol class="inline-flex items-center space-x-1 md:space-x-2">
                             <li class="inline-flex items-center">
@@ -34,13 +34,13 @@
                     </nav>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="bg-white rounded-lg shadow-md border border-brand-200 p-6">
                     <form action="/vols/save" method="post" class="space-y-6">
                         <input type="hidden" name="id" value="${vol.id}">
                         
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
-                                <label for="aeroportDepart" class="block text-sm font-medium text-gray-700 mb-2">Aéroport de Départ</label>
+                                <label for="aeroportDepart" class="block text-sm font-medium text-brand-700 mb-2">Aéroport de Départ</label>
                                 <select name="aeroportDepart.id" id="aeroportDepart" required
                                         class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent">
                                     <option value="">Sélectionner...</option>
@@ -50,7 +50,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="aeroportArrivee" class="block text-sm font-medium text-gray-700 mb-2">Aéroport d'Arrivée</label>
+                                <label for="aeroportArrivee" class="block text-sm font-medium text-brand-700 mb-2">Aéroport d'Arrivée</label>
                                 <select name="aeroportArrivee.id" id="aeroportArrivee" required
                                         class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent">
                                     <option value="">Sélectionner...</option>
@@ -62,16 +62,16 @@
                         </div>
 
                         <div>
-                            <label for="duree" class="block text-sm font-medium text-gray-700 mb-2">Durée (en heures)</label>
+                            <label for="duree" class="block text-sm font-medium text-brand-700 mb-2">Durée (en heures)</label>
                             <input type="number" step="0.01" name="duree" id="duree" value="${vol.duree}" required
                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent">
                         </div>
 
                         <div class="flex gap-3 pt-4">
-                            <button type="submit" class="bg-brand-600 text-white px-6 py-2 rounded-md hover:bg-brand-700 shadow-sm transition-colors text-sm font-medium">
+                            <button type="submit" class="bg-gradient-to-r from-brand-600 to-brand-700 text-white px-6 py-2 rounded-md hover:from-brand-700 hover:to-brand-800 shadow-lg transition-all text-sm font-medium">
                                 Enregistrer
                             </button>
-                            <a href="/vols" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-200 shadow-sm transition-colors text-sm font-medium">
+                            <a href="/vols" class="bg-brand-100 text-brand-700 px-6 py-2 rounded-md hover:bg-brand-200 shadow-sm transition-colors text-sm font-medium">
                                 Annuler
                             </a>
                         </div>
