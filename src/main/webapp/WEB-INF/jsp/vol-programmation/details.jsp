@@ -87,6 +87,34 @@
                                         <div class="text-gray-900 font-medium">${programmation.avion.matricule} (${programmation.avion.capacite} places)</div>
                                     </div>
                                 </div>
+
+                                <!-- Potential Revenue Section -->
+                                <div class="mt-8 pt-6 border-t border-gray-200">
+                                    <div class="text-xs text-gray-400 uppercase font-semibold mb-4">Revenus Potentiels (Si Plein)</div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <c:forEach items="${configurations}" var="conf">
+                                            <c:set var="potential" value="${potentialRevenueByClasse[conf.classe.id]}" />
+                                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                                <div class="text-xs text-gray-500 font-medium">${conf.classe.nom}</div>
+                                                <div class="text-sm font-bold text-gray-900">
+                                                    <fmt:formatNumber value="${potential}" type="currency" currencySymbol="Ar" />
+                                                </div>
+                                                <div class="text-[10px] text-gray-400">
+                                                    ${conf.placeFin - conf.placeDebut + 1} places
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                        <div class="bg-brand-50 rounded-lg p-3 border border-brand-100">
+                                            <div class="text-xs text-brand-700 font-bold uppercase tracking-wider">Total Potentiel</div>
+                                            <div class="text-lg font-black text-brand-600">
+                                                <fmt:formatNumber value="${totalPotentialRevenue}" type="currency" currencySymbol="Ar" />
+                                            </div>
+                                            <div class="text-[10px] text-brand-400">
+                                                ${programmation.avion.capacite} places au total
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -107,42 +135,47 @@
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
                                         <c:forEach items="${reservations}" var="res">
-                                            <c:set var="resClasse" value="${null}" />
-                                            <c:if test="${not empty res.placesSelectionnees}">
-                                                <c:set var="firstSeat" value="${res.placesSelectionnees[0]}" />
-                                                <c:forEach items="${configurations}" var="conf">
-                                                    <c:if test="${firstSeat >= conf.placeDebut && firstSeat <= conf.placeFin}">
-                                                        <c:set var="resClasse" value="${conf.classe}" />
-                                                    </c:if>
-                                                </c:forEach>
-                                            </c:if>
-                                            
-                                            <c:set var="resTarif" value="0" />
-                                            <c:forEach items="${tarifs}" var="t">
-                                                <c:if test="${resClasse != null && t.classe.id == resClasse.id}">
-                                                    <c:set var="resTarif" value="${t.tarif}" />
-                                                </c:if>
-                                            </c:forEach>
+                                            <c:set var="totalResAmount" value="0" />
                                             <tr class="hover:bg-gray-50 transition-colors">
                                                 <td class="px-6 py-4">
                                                     <div class="font-medium text-gray-900">${res.client.nom} ${res.client.prenom}</div>
                                                     <div class="text-xs text-gray-500">Réf: #${res.id} • ${res.client.email}</div>
                                                 </td>
-                                                <td class="px-6 py-4">
-                                                    <c:if test="${resClasse != null}">
-                                                        <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-600">
-                                                            ${resClasse.nom}
-                                                        </span>
-                                                    </c:if>
+                                                <td class="px-6 py-4" colspan="2">
+                                                    <div class="space-y-2">
+                                                        <c:forEach items="${res.placesSelectionnees}" var="place">
+                                                            <c:set var="seatClasse" value="${null}" />
+                                                            <c:forEach items="${configurations}" var="conf">
+                                                                <c:if test="${place >= conf.placeDebut && place <= conf.placeFin}">
+                                                                    <c:set var="seatClasse" value="${conf.classe}" />
+                                                                </c:if>
+                                                            </c:forEach>
+                                                            
+                                                            <c:set var="seatTarif" value="0" />
+                                                            <c:forEach items="${tarifs}" var="t">
+                                                                <c:if test="${seatClasse != null && t.classe.id == seatClasse.id}">
+                                                                    <c:set var="seatTarif" value="${t.tarif}" />
+                                                                </c:if>
+                                                            </c:forEach>
+                                                            <c:set var="totalResAmount" value="${totalResAmount + seatTarif}" />
+                                                            
+                                                            <div class="flex items-center gap-4 text-xs">
+                                                                <span class="font-bold text-gray-700 w-8">${place}</span>
+                                                                <c:if test="${seatClasse != null}">
+                                                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 font-semibold text-blue-600 border border-blue-100">
+                                                                        ${seatClasse.nom}
+                                                                    </span>
+                                                                </c:if>
+                                                                <span class="text-gray-500">
+                                                                    <fmt:formatNumber value="${seatTarif}" type="currency" currencySymbol="Ar" />
+                                                                </span>
+                                                            </div>
+                                                        </c:forEach>
+                                                    </div>
+                                                    <div class="text-[10px] text-gray-400 mt-2 italic">(${res.nombrePlaces} places au total)</div>
                                                 </td>
-                                                <td class="px-6 py-4 text-gray-600">
-                                                    <c:forEach items="${res.placesSelectionnees}" var="place" varStatus="status">
-                                                        ${place}${!status.last ? ', ' : ''}
-                                                    </c:forEach>
-                                                    <div class="text-xs text-gray-400">(${res.nombrePlaces} places)</div>
-                                                </td>
-                                                <td class="px-6 py-4 text-right font-semibold text-gray-900">
-                                                    <fmt:formatNumber value="${res.nombrePlaces * resTarif}" type="currency" currencySymbol="Ar" />
+                                                <td class="px-6 py-4 text-right font-bold text-brand-600 align-top">
+                                                    <fmt:formatNumber value="${totalResAmount}" type="currency" currencySymbol="Ar" />
                                                 </td>
                                             </tr>
                                         </c:forEach>
