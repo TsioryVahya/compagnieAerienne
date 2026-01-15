@@ -127,6 +127,7 @@ public class VolProgrammationController {
 
         // Calculer les revenus potentiels par classe et total
         Map<Integer, BigDecimal> potentialRevenueByClasse = new HashMap<>();
+        Map<Integer, BigDecimal> tariffsByClasse = new HashMap<>();
         BigDecimal totalPotentialRevenue = BigDecimal.ZERO;
 
         for (ClassePlace cp : configurations) {
@@ -136,6 +137,7 @@ public class VolProgrammationController {
                 .findFirst()
                 .orElse(BigDecimal.ZERO);
             
+            tariffsByClasse.put(cp.getClasse().getId(), tarif);
             int capacity = cp.getPlaceFin() - cp.getPlaceDebut() + 1;
             BigDecimal potential = tarif.multiply(new BigDecimal(capacity));
             potentialRevenueByClasse.put(cp.getClasse().getId(), potential);
@@ -157,6 +159,7 @@ public class VolProgrammationController {
         model.addAttribute("occupiedCountByClasse", occupiedCountByClasse);
         model.addAttribute("totalRevenue", totalRevenue);
         model.addAttribute("potentialRevenueByClasse", potentialRevenueByClasse);
+        model.addAttribute("tariffsByClasse", tariffsByClasse);
         model.addAttribute("totalPotentialRevenue", totalPotentialRevenue);
         model.addAttribute("allStatuts", statutVolService.findAll());
         model.addAttribute("activePage", "programmation");

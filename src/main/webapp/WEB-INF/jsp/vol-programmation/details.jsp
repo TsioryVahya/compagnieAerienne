@@ -94,13 +94,19 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                         <c:forEach items="${configurations}" var="conf">
                                             <c:set var="potential" value="${potentialRevenueByClasse[conf.classe.id]}" />
+                                            <c:set var="tarif" value="${tariffsByClasse[conf.classe.id]}" />
                                             <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
                                                 <div class="text-xs text-gray-500 font-medium">${conf.classe.nom}</div>
                                                 <div class="text-sm font-bold text-gray-900">
                                                     <fmt:formatNumber value="${potential}" type="currency" currencySymbol="Ar" />
                                                 </div>
-                                                <div class="text-[10px] text-gray-400">
-                                                    ${conf.placeFin - conf.placeDebut + 1} places
+                                                <div class="flex justify-between items-center mt-1">
+                                                    <div class="text-[10px] text-gray-400">
+                                                        ${conf.placeFin - conf.placeDebut + 1} places
+                                                    </div>
+                                                    <div class="text-[10px] font-semibold text-brand-600">
+                                                        à <fmt:formatNumber value="${tarif}" type="currency" currencySymbol="Ar" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </c:forEach>
