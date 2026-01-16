@@ -2,7 +2,7 @@
 
 ## 📊 Résumé des Changements
 
-Ce rapport documente la transformation complète du thème CSS du projet **AIRLINK ERP** vers un thème inspiré d'**Emirates Airlines**.
+Ce rapport documente la transformation complète du thème CSS du projet **AIRLINK ** vers un thème inspiré d'**Emirates Airlines**.
 
 ### 🎨 Palette de Couleurs Emirates
 

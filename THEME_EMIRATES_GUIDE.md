@@ -1,8 +1,8 @@
-# 🌟 AIRLINK ERP - Thème Emirates Configuré
+# 🌟 AIRLINK  - Thème Emirates Configuré
 
 ## Vue d'ensemble
 
-L'application **AIRLINK ERP** a été redessinée avec un thème luxueux inspiré par **Emirates Airlines**. Le nouveau design présente une palette de couleurs premium comprenant de l'or, du noir et du blanc, reflétant l'élégance et le professionnalisme.
+L'application **AIRLINK ** a été redessinée avec un thème luxueux inspiré par **Emirates Airlines**. Le nouveau design présente une palette de couleurs premium comprenant de l'or, du noir et du blanc, reflétant l'élégance et le professionnalisme.
 
 ## 🎨 Design System
 

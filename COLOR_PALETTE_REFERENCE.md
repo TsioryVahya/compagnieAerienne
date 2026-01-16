@@ -288,4 +288,4 @@ Pour utilisation rapide en CSS personnalisé:
 
 **Dernière Mise à Jour**: 15 Janvier 2026  
 **Version**: 1.0  
-**Designers**: Équipe AIRLINK ERP
+**Designers**: Équipe AIRLINK 

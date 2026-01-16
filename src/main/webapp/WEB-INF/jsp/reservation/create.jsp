@@ -177,7 +177,7 @@
         let plageFin = 36;
         let currentPage = 1;
         let occupiedSeats = []; // Places déjà réservées
-        const seatsPerPage = 36; // 6 rangées × 6 sièges
+        const seatsPage = 36; // 6 rangées × 6 sièges
         const seatsPerRow = 6;
         let avionClasses = []; // Stocke les plages de sièges par classe pour l'avion actuel
 
@@ -268,11 +268,11 @@
         // Fonction pour générer la grille de sièges
         function generateSeats() {
             const totalSeats = plageFin - plageDebut + 1;
-            const totalPages = Math.ceil(totalSeats / seatsPerPage);
+            const totalPages = Math.ceil(totalSeats / seatsPage);
             
             // Calculer les sièges pour la page actuelle
-            const startSeat = plageDebut + (currentPage - 1) * seatsPerPage;
-            const endSeat = Math.min(startSeat + seatsPerPage - 1, plageFin);
+            const startSeat = plageDebut + (currentPage - 1) * seatsPage;
+            const endSeat = Math.min(startSeat + seatsPage - 1, plageFin);
             
             seatsContainer.innerHTML = '';
             
