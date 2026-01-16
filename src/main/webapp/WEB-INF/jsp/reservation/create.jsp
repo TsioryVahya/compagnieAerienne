@@ -88,7 +88,7 @@
                         <!-- Nombre de Places -->
                         <div>
                             <label for="nombrePlaces" class="block text-sm font-medium text-gray-700 mb-2">Nombre de Places</label>
-                            <input type="number" min="1" max="10" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" id="nombrePlaces" name="nombrePlaces" value="1" required>
+                            <input type="number" min="1" max="100" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" id="nombrePlaces" name="nombrePlaces" value="1" required>
                         </div>
 
                         <!-- Sélection des Places -->
