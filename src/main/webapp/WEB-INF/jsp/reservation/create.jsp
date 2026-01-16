@@ -309,25 +309,39 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.dataset.seat = seatNum;
-            btn.textContent = seatNum;
+            btn.className = 'seat-btn w-10 h-10 relative flex items-center justify-center rounded transition-all text-sm font-bold';
             
             // Trouver la classe pour ce siège
             const classeInfo = avionClasses.find(c => seatNum >= c.placeDebut && seatNum <= c.placeFin);
+            let classCode = '';
             if (classeInfo) {
-                btn.title = classeInfo.classe.nom;
+                const nom = classeInfo.classe.nom;
+                if (nom.includes('Première')) classCode = 'PC';
+                else if (nom.includes('Affaires')) classCode = 'Af';
+                else if (nom.includes('Premium')) classCode = 'Pr';
+                else if (nom.includes('Économique')) classCode = 'Ec';
+                
+                btn.title = nom + ' - Siège ' + seatNum;
                 // Colorer légèrement selon la classe pour aider l'utilisateur
-                if (classeInfo.classe.nom.includes('Première')) btn.classList.add('ring-2', 'ring-yellow-400');
-                else if (classeInfo.classe.nom.includes('Affaires')) btn.classList.add('ring-2', 'ring-blue-400');
+                if (nom.includes('Première')) btn.classList.add('ring-2', 'ring-yellow-400');
+                else if (nom.includes('Affaires')) btn.classList.add('ring-2', 'ring-blue-400');
             }
             
+            // Contenu du bouton avec l'exposant de classe
+            var innerContent = '<span class="seat-num-text">' + seatNum + '</span>';
+            if (classCode) {
+                innerContent += '<span class="absolute -top-1.5 -right-1 bg-white px-0.5 border border-gray-200 rounded text-[8px] font-bold text-gray-500 leading-none py-0.5">' + classCode + '</span>';
+            }
+            btn.innerHTML = innerContent;
+            
             // Vérifier si la place est occupée
-            const isOccupied = occupiedSeats.includes(seatNum);
+            const isOccupied = occupiedSeats.includes(parseInt(seatNum));
             
             if (isOccupied) {
-                btn.className = 'seat-btn w-10 h-10 bg-red-200 border-2 border-red-400 rounded transition-colors text-sm font-medium cursor-not-allowed';
+                btn.classList.add('bg-red-200', 'border-2', 'border-red-400', 'cursor-not-allowed');
                 btn.disabled = true;
             } else {
-                btn.className = 'seat-btn w-10 h-10 bg-green-100 border border-green-300 rounded transition-colors text-sm font-medium hover:border-brand-500';
+                btn.classList.add('bg-green-100', 'border', 'border-green-300', 'hover:border-brand-500');
                 btn.disabled = false;
             }
             
@@ -409,12 +423,15 @@
             const seatButtons = document.querySelectorAll('.seat-btn');
             seatButtons.forEach(btn => {
                 const seatNum = btn.dataset.seat;
-                if (selectedSeats.includes(seatNum)) {
-                    btn.classList.remove('bg-green-100', 'border-green-300');
+                const isSelected = selectedSeats.includes(seatNum);
+                const isOccupied = occupiedSeats.includes(parseInt(seatNum));
+
+                if (isSelected) {
+                    btn.classList.remove('bg-green-100', 'border-green-300', 'text-gray-900');
                     btn.classList.add('bg-brand-600', 'text-white', 'border-brand-700');
-                } else if (!occupiedSeats.includes(parseInt(seatNum))) {
+                } else if (!isOccupied) {
                     btn.classList.remove('bg-brand-600', 'text-white', 'border-brand-700');
-                    btn.classList.add('bg-green-100', 'border-green-300');
+                    btn.classList.add('bg-green-100', 'border-green-300', 'text-gray-900');
                 }
             });
         }

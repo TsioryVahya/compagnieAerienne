@@ -88,6 +88,21 @@
                                     </div>
                                 </div>
 
+                                <div class="grid grid-cols-2 gap-6 pt-6 border-t border-gray-200 mt-4">
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase font-semibold mb-1">Revenu Potentiel (Total)</div>
+                                        <div class="text-xl font-bold text-brand-600">
+                                            <fmt:formatNumber value="${potentialRevenue}" type="currency" currencySymbol="Ar" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase font-semibold mb-1">Chiffre d'Affaires Actuel</div>
+                                        <div class="text-xl font-bold text-green-600">
+                                            <fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="Ar" />
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Tariffs Section -->
                                 <div class="mt-8 pt-6 border-t border-gray-200">
                                     <div class="text-xs text-gray-400 uppercase font-semibold mb-4">Tarifs en Vigueur</div>

@@ -154,5 +154,13 @@ JOIN statut_vol s ON s.nom = 'En cours';
 -- TABLE: tarif_vol (initialisation)
 -- ===============================
 -- ===============================
+-- TABLE: remise_tarif
+-- ===============================
+INSERT INTO remise_tarif (remise, formule, id_type_passager_appliquer, id_type_passager_reference, id_classe, id_vol_programmation) VALUES
+(10.00, '%', 2, 1, 1, NULL), -- Enfant = 10% de l'Adulte en Première Classe (Global)
+(10.00, '%', 2, 1, 2, NULL), -- Enfant = 10% de l'Adulte en Affaires (Global)
+(10.00, '%', 2, 1, 3, NULL); -- Enfant = 10% de l'Adulte en Économique (Global)
+
+-- ===============================
 -- TABLE: reservation & reservation_place (exemples)
 -- ===============================
