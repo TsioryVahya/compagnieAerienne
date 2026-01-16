@@ -79,10 +79,11 @@
                                         </td>
                                         <td class="px-6 py-3">${res.client.nom} ${res.client.prenom}</td>
                                         <td class="px-6 py-3">
-                                            <div class="flex flex-wrap gap-1">
-                                                <c:forEach items="${res.placesSelectionnees}" var="place">
-                                                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                                        ${place}
+                                            <div class="flex flex-wrap gap-2">
+                                                <c:forEach items="${res.detailsPlaces}" var="rp">
+                                                    <span class="inline-flex flex-col items-center rounded-md bg-brand-50 border border-brand-100 px-2 py-1 text-xs font-medium text-brand-700">
+                                                        <span class="font-bold">${rp.place}</span>
+                                                        <span class="text-[9px] uppercase opacity-75">${rp.typePassager.nom}</span>
                                                     </span>
                                                 </c:forEach>
                                             </div>

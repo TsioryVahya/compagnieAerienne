@@ -44,6 +44,13 @@ INSERT INTO classe (nom) VALUES
 ('Première Classe');
 
 -- ===============================
+-- TABLE: type_passager
+-- ===============================
+INSERT INTO type_passager (nom) VALUES
+('Adulte'),
+('Enfant');
+
+-- ===============================
 -- TABLE: client
 -- ===============================
 INSERT INTO client (nom, prenom, email, telephone) VALUES
@@ -146,14 +153,6 @@ JOIN statut_vol s ON s.nom = 'En cours';
 -- ===============================
 -- TABLE: tarif_vol (initialisation)
 -- ===============================
-INSERT INTO tarif_vol (id_vol_programmation, id_classe, tarif)
-SELECT vp.id, c.id, 
-    CASE 
-        WHEN c.nom = 'Économique' THEN 250000
-        WHEN c.nom = 'Affaires' THEN 500000
-        WHEN c.nom = 'Première Classe' THEN 800000
-        ELSE 200000
-    END
-FROM vol_programmation vp, classe c;
-
+-- ===============================
+-- TABLE: reservation & reservation_place (exemples)
 -- ===============================

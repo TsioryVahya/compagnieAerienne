@@ -88,37 +88,35 @@
                                     </div>
                                 </div>
 
-                                <!-- Potential Revenue Section -->
+                                <!-- Tariffs Section -->
                                 <div class="mt-8 pt-6 border-t border-gray-200">
-                                    <div class="text-xs text-gray-400 uppercase font-semibold mb-4">Revenus Potentiels (Si Plein)</div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div class="text-xs text-gray-400 uppercase font-semibold mb-4">Tarifs en Vigueur</div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         <c:forEach items="${configurations}" var="conf">
-                                            <c:set var="potential" value="${potentialRevenueByClasse[conf.classe.id]}" />
-                                            <c:set var="tarif" value="${tariffsByClasse[conf.classe.id]}" />
-                                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                                                <div class="text-xs text-gray-500 font-medium">${conf.classe.nom}</div>
-                                                <div class="text-sm font-bold text-gray-900">
-                                                    <fmt:formatNumber value="${potential}" type="currency" currencySymbol="Ar" />
+                                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <span class="w-2 h-2 bg-brand-500 rounded-full"></span>
+                                                    <h4 class="text-sm font-bold text-gray-900 uppercase tracking-wider">${conf.classe.nom}</h4>
                                                 </div>
-                                                <div class="flex justify-between items-center mt-1">
-                                                    <div class="text-[10px] text-gray-400">
-                                                        ${conf.placeFin - conf.placeDebut + 1} places
-                                                    </div>
-                                                    <div class="text-[10px] font-semibold text-brand-600">
-                                                        à <fmt:formatNumber value="${tarif}" type="currency" currencySymbol="Ar" />
-                                                    </div>
+                                                <div class="space-y-2">
+                                                    <c:forEach items="${typePassagers}" var="type">
+                                                        <c:set var="t_tarif" value="${allTariffs[conf.classe.id][type.id]}" />
+                                                        <c:if test="${not empty t_tarif}">
+                                                            <div class="flex justify-between items-center text-xs">
+                                                                <span class="text-gray-500">${type.nom}</span>
+                                                                <span class="font-bold text-brand-600">
+                                                                    <fmt:formatNumber value="${t_tarif}" type="currency" currencySymbol="Ar" />
+                                                                </span>
+                                                            </div>
+                                                        </c:if>
+                                                    </c:forEach>
+                                                </div>
+                                                <div class="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                                                    <span class="text-[10px] text-gray-400 uppercase font-medium">Capacité</span>
+                                                    <span class="text-xs font-bold text-gray-700">${conf.placeFin - conf.placeDebut + 1} places</span>
                                                 </div>
                                             </div>
                                         </c:forEach>
-                                        <div class="bg-brand-50 rounded-lg p-3 border border-brand-100">
-                                            <div class="text-xs text-brand-700 font-bold uppercase tracking-wider">Total Potentiel</div>
-                                            <div class="text-lg font-black text-brand-600">
-                                                <fmt:formatNumber value="${totalPotentialRevenue}" type="currency" currencySymbol="Ar" />
-                                            </div>
-                                            <div class="text-[10px] text-brand-400">
-                                                ${programmation.avion.capacite} places au total
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -134,8 +132,7 @@
                                     <thead class="bg-gray-50 text-gray-900 font-semibold border-b border-gray-200">
                                         <tr>
                                             <th class="px-6 py-3">Passager</th>
-                                            <th class="px-6 py-3">Classe</th>
-                                            <th class="px-6 py-3">Sièges</th>
+                                            <th class="px-6 py-3">Détails des Sièges</th>
                                             <th class="px-6 py-3 text-right">Montant</th>
                                         </tr>
                                     </thead>
@@ -147,38 +144,40 @@
                                                     <div class="font-medium text-gray-900">${res.client.nom} ${res.client.prenom}</div>
                                                     <div class="text-xs text-gray-500">Réf: #${res.id} • ${res.client.email}</div>
                                                 </td>
-                                                <td class="px-6 py-4" colspan="2">
+                                                <td class="px-6 py-4">
                                                     <div class="space-y-2">
-                                                        <c:forEach items="${res.placesSelectionnees}" var="place">
+                                                        <c:forEach items="${res.detailsPlaces}" var="rp">
                                                             <c:set var="seatClasse" value="${null}" />
                                                             <c:forEach items="${configurations}" var="conf">
-                                                                <c:if test="${place >= conf.placeDebut && place <= conf.placeFin}">
+                                                                <c:if test="${rp.place >= conf.placeDebut && rp.place <= conf.placeFin}">
                                                                     <c:set var="seatClasse" value="${conf.classe}" />
                                                                 </c:if>
                                                             </c:forEach>
                                                             
                                                             <c:set var="seatTarif" value="0" />
                                                             <c:forEach items="${tarifs}" var="t">
-                                                                <c:if test="${seatClasse != null && t.classe.id == seatClasse.id}">
+                                                                <c:if test="${seatClasse != null && t.classe.id == seatClasse.id && t.typePassager.id == rp.typePassager.id}">
                                                                     <c:set var="seatTarif" value="${t.tarif}" />
                                                                 </c:if>
                                                             </c:forEach>
                                                             <c:set var="totalResAmount" value="${totalResAmount + seatTarif}" />
                                                             
                                                             <div class="flex items-center gap-4 text-xs">
-                                                                <span class="font-bold text-gray-700 w-8">${place}</span>
+                                                                <span class="font-bold text-gray-700 w-8">${rp.place}</span>
                                                                 <c:if test="${seatClasse != null}">
                                                                     <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 font-semibold text-blue-600 border border-blue-100">
                                                                         ${seatClasse.nom}
                                                                     </span>
                                                                 </c:if>
+                                                                <span class="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 font-semibold text-purple-600 border border-purple-100">
+                                                                    ${rp.typePassager.nom}
+                                                                </span>
                                                                 <span class="text-gray-500">
                                                                     <fmt:formatNumber value="${seatTarif}" type="currency" currencySymbol="Ar" />
                                                                 </span>
                                                             </div>
                                                         </c:forEach>
                                                     </div>
-                                                    <div class="text-[10px] text-gray-400 mt-2 italic">(${res.nombrePlaces} places au total)</div>
                                                 </td>
                                                 <td class="px-6 py-4 text-right font-bold text-brand-600 align-top">
                                                     <fmt:formatNumber value="${totalResAmount}" type="currency" currencySymbol="Ar" />
@@ -187,7 +186,7 @@
                                         </c:forEach>
                                         <c:if test="${empty reservations}">
                                             <tr>
-                                                <td colspan="4" class="px-6 py-12 text-center text-gray-400 italic">
+                                                <td colspan="3" class="px-6 py-12 text-center text-gray-400 italic">
                                                     Aucun passager enregistré pour ce vol.
                                                 </td>
                                             </tr>
@@ -254,24 +253,47 @@
                                 </div>
                                 
                                 <div class="pt-6 border-t border-gray-200">
-                                    <div class="text-xs text-gray-400 uppercase font-semibold mb-4">Répartition par Classe</div>
-                                    <div class="space-y-4">
+                                    <div class="text-xs text-gray-400 uppercase font-semibold mb-4">Répartition par Classe & Type</div>
+                                    <div class="space-y-6">
                                         <c:forEach items="${configurations}" var="conf">
-                                            <c:set var="t_tarif" value="${tariffsByClasse[conf.classe.id]}" />
-                                            <c:set var="classCount" value="${occupiedCountByClasse[conf.classe.id]}" />
-                                            <c:set var="classRevenue" value="${classCount * t_tarif}" />
+                                            <c:set var="classId" value="${conf.classe.id}" />
+                                            <c:set var="classRevenue" value="0" />
                                             
-                                            <div class="flex justify-between items-end">
-                                                <div>
-                                                    <div class="text-sm font-medium text-gray-900">${conf.classe.nom}</div>
-                                                    <div class="text-xs text-gray-500">${classCount} places vendues à <fmt:formatNumber value="${t_tarif}" type="currency" currencySymbol="Ar" /></div>
+                                            <div class="space-y-2">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-sm font-bold text-gray-900">${conf.classe.nom}</span>
+                                                    <span class="text-[10px] text-gray-400 uppercase font-bold">${occupiedCountByClasse[classId]} places vendues</span>
                                                 </div>
-                                                <div class="text-sm font-bold text-gray-900">
-                                                    <fmt:formatNumber value="${classRevenue}" type="currency" currencySymbol="Ar" />
+                                                
+                                                <div class="pl-4 space-y-2 border-l-2 border-gray-100">
+                                                    <c:forEach items="${typePassagers}" var="type">
+                                                        <c:set var="typeId" value="${type.id}" />
+                                                        <c:set var="count" value="${countByClasseAndType[classId][typeId]}" />
+                                                        <c:set var="revenue" value="${revenueByClasseAndType[classId][typeId]}" />
+                                                        <c:if test="${not empty count && count > 0}">
+                                                            <c:set var="classRevenue" value="${classRevenue + revenue}" />
+                                                            <div class="flex justify-between items-center text-xs">
+                                                                <div class="text-gray-600">
+                                                                    ${type.nom} <span class="text-gray-400">(${count})</span>
+                                                                </div>
+                                                                <div class="font-medium text-gray-900">
+                                                                    <fmt:formatNumber value="${revenue}" type="currency" currencySymbol="Ar" />
+                                                                </div>
+                                                            </div>
+                                                        </c:if>
+                                                    </c:forEach>
                                                 </div>
-                                            </div>
-                                            <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                                                <div class="bg-brand-600 h-full" style="width: ${totalRevenue > 0 ? (classRevenue / totalRevenue * 100) : 0}%"></div>
+                                                
+                                                <div class="flex justify-between items-center pt-1">
+                                                    <span class="text-[10px] text-gray-400 italic">Total ${conf.classe.nom}</span>
+                                                    <span class="text-sm font-bold text-brand-600">
+                                                        <fmt:formatNumber value="${classRevenue}" type="currency" currencySymbol="Ar" />
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                                                    <div class="bg-brand-600 h-full" style="width: ${totalRevenue > 0 ? (classRevenue / totalRevenue * 100) : 0}%"></div>
+                                                </div>
                                             </div>
                                         </c:forEach>
                                     </div>

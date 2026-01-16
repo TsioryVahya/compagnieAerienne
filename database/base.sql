@@ -87,10 +87,17 @@ CREATE TABLE reservation (
     nombre_places INTEGER DEFAULT 1
 );
 
+-- Création de la table TypePassager
+CREATE TABLE type_passager (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(50) NOT NULL
+);
+
 -- Création de la table ReservationPlace
 CREATE TABLE reservation_place (
     id_reservation INTEGER REFERENCES reservation(id),
-    place INTEGER
+    place INTEGER,
+    id_type_passager INTEGER REFERENCES type_passager(id)
 );
 
 -- Création de la table StatutReservation
@@ -112,5 +119,7 @@ CREATE TABLE tarif_vol (
     id SERIAL PRIMARY KEY,
     id_vol_programmation INTEGER REFERENCES vol_programmation(id),
     id_classe INTEGER REFERENCES classe(id),
+    id_type_passager INTEGER REFERENCES type_passager(id),
     tarif DECIMAL(10,2)
 );
+

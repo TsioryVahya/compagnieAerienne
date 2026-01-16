@@ -15,6 +15,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Intege
     @Query("SELECT r FROM Reservation r WHERE r.volProgrammation.id = :volProgrammationId")
     List<Reservation> findByVolProgrammationId(@Param("volProgrammationId") Integer volProgrammationId);
     
-    @Query("SELECT rp FROM Reservation r JOIN r.placesSelectionnees rp WHERE r.volProgrammation.id = :volProgrammationId")
+    @Query("SELECT rp.place FROM Reservation r JOIN r.detailsPlaces rp WHERE r.volProgrammation.id = :volProgrammationId")
     List<Integer> findOccupiedSeatsByVolProgrammationId(@Param("volProgrammationId") Integer volProgrammationId);
 }
