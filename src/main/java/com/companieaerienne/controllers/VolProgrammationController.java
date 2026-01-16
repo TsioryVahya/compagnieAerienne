@@ -53,6 +53,9 @@ public class VolProgrammationController {
     @Autowired
     private com.companieaerienne.services.AvionService avionService;
 
+    @Autowired
+    private com.companieaerienne.services.RemiseTarifService remiseTarifService;
+
     @GetMapping
     public String list(@RequestParam(required = false) String depart,
                       @RequestParam(required = false) String arrivee,
@@ -127,6 +130,7 @@ public class VolProgrammationController {
 
         // Calculer le chiffre d'affaires
         BigDecimal totalRevenue = volProgrammationService.calculateRevenue(programmation);
+        BigDecimal potentialRevenue = volProgrammationService.calculatePotentialRevenue(programmation);
 
         // Calculer les revenus par classe et par type de passager
         Map<Integer, Map<Integer, Integer>> countByClasseAndType = new HashMap<>();
@@ -190,6 +194,7 @@ public class VolProgrammationController {
         model.addAttribute("availableSeats", availableSeatsByClasse);
         model.addAttribute("occupiedCountByClasse", occupiedCountByClasse);
         model.addAttribute("totalRevenue", totalRevenue);
+        model.addAttribute("potentialRevenue", potentialRevenue);
         model.addAttribute("countByClasseAndType", countByClasseAndType);
         model.addAttribute("revenueByClasseAndType", revenueByClasseAndType);
         model.addAttribute("allTariffs", allTariffs);
@@ -204,6 +209,7 @@ public class VolProgrammationController {
         model.addAttribute("avions", avionService.findAll());
         model.addAttribute("classes", classeService.findAll());
         model.addAttribute("typePassagers", typePassagerService.findAll());
+        model.addAttribute("remises", remiseTarifService.findGlobalOrByVolProgrammationId(null));
         model.addAttribute("programmation", new VolProgrammation());
         model.addAttribute("activePage", "programmation");
         return "vol-programmation/create";
@@ -216,6 +222,7 @@ public class VolProgrammationController {
         model.addAttribute("avions", avionService.findAll());
         model.addAttribute("classes", classeService.findAll());
         model.addAttribute("typePassagers", typePassagerService.findAll());
+        model.addAttribute("remises", remiseTarifService.findGlobalOrByVolProgrammationId(id));
         model.addAttribute("programmation", programmation);
         
         // Charger les tarifs existants pour les pré-remplir dans le formulaire

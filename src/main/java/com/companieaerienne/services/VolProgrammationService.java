@@ -78,4 +78,35 @@ public class VolProgrammationService {
         }
         return total;
     }
+
+    public BigDecimal calculatePotentialRevenue(VolProgrammation programmation) {
+        if (programmation.getTarifs() == null || programmation.getAvion() == null) return BigDecimal.ZERO;
+        
+        List<ClassePlace> configurations = classePlaceService.findByAvion(programmation.getAvion().getId());
+        BigDecimal total = BigDecimal.ZERO;
+        
+        for (ClassePlace config : configurations) {
+            int nbPlaces = config.getPlaceFin() - config.getPlaceDebut() + 1;
+            Integer classeId = config.getClasse().getId();
+            
+            // On prend le tarif "Adulte" par défaut pour le potentiel
+            // S'il n'y a pas d'Adulte, on prend le premier tarif trouvé pour cette classe
+            BigDecimal tarifUnitaire = programmation.getTarifs().stream()
+                .filter(t -> t.getClasse().getId().equals(classeId))
+                .sorted((t1, t2) -> {
+                    // Priorité à "Adulte"
+                    String nom1 = t1.getTypePassager() != null ? t1.getTypePassager().getNom() : "";
+                    String nom2 = t2.getTypePassager() != null ? t2.getTypePassager().getNom() : "";
+                    if (nom1.equalsIgnoreCase("Adulte")) return -1;
+                    if (nom2.equalsIgnoreCase("Adulte")) return 1;
+                    return 0;
+                })
+                .map(TarifVol::getTarif)
+                .findFirst()
+                .orElse(BigDecimal.ZERO);
+                
+            total = total.add(tarifUnitaire.multiply(new BigDecimal(nbPlaces)));
+        }
+        return total;
+    }
 }

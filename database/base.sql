@@ -123,3 +123,12 @@ CREATE TABLE tarif_vol (
     tarif DECIMAL(10,2)
 );
 
+CREATE TABLE remise_tarif (
+    id SERIAL PRIMARY KEY,
+    remise NUMERIC(10,2) NOT NULL,
+    formule VARCHAR(10) NOT NULL,
+    id_type_passager_appliquer INTEGER REFERENCES type_passager(id), 
+    id_type_passager_reference INTEGER REFERENCES type_passager(id), 
+    id_classe INTEGER REFERENCES classe(id),
+    id_vol_programmation INTEGER REFERENCES vol_programmation(id)
+);
