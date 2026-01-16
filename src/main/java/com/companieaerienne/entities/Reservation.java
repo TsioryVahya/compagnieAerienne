@@ -27,6 +27,24 @@ public class Reservation {
 
     @ElementCollection
     @CollectionTable(name = "reservation_place", joinColumns = @JoinColumn(name = "id_reservation"))
-    @Column(name = "place")
-    private List<Integer> placesSelectionnees; // Liste des numéros de places sélectionnées
+    private List<ReservationPlace> detailsPlaces; // Liste des numéros de places et types passagers
+
+    @Transient
+    public List<Integer> getPlacesSelectionnees() {
+        if (detailsPlaces == null) return List.of();
+        return detailsPlaces.stream().map(ReservationPlace::getPlace).toList();
+    }
+
+    @Transient
+    public void setPlacesSelectionnees(List<Integer> places) {
+        if (places == null) return;
+        this.detailsPlaces = places.stream()
+            .map(p -> {
+                ReservationPlace rp = new ReservationPlace();
+                rp.setPlace(p);
+                // Le type de passager sera défini plus tard ou restera null si non spécifié
+                return rp;
+            })
+            .collect(java.util.stream.Collectors.toList());
+    }
 }

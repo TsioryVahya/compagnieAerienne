@@ -20,6 +20,10 @@ public class TarifVol {
     @JoinColumn(name = "id_classe")
     private Classe classe;
 
+    @ManyToOne
+    @JoinColumn(name = "id_type_passager")
+    private TypePassager typePassager;
+
     @Column(precision = 10, scale = 2)
     private BigDecimal tarif;
 }

@@ -86,26 +86,36 @@
                                    required>
                         </div>
 
-                        <!-- Tarifs par Classe -->
+                        <!-- Tarifs par Classe et Type de Passager -->
                         <div class="border-t border-gray-100 pt-6">
-                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Tarifs par Classe</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Grille Tarifaire (Classe & Type Passager)</h3>
+                            <div class="space-y-6">
                                 <c:forEach items="${classes}" var="classe">
-                                    <c:set var="tarifKey" value="tarif_${classe.id}" />
-                                    <div>
-                                        <label for="tarif_${classe.id}" class="block text-xs font-medium text-gray-500 mb-1">${classe.nom}</label>
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-500 sm:text-sm">Ar</span>
-                                            </div>
-                                            <input type="number" 
-                                                   step="0.01" 
-                                                   name="tarif_${classe.id}" 
-                                                   id="tarif_${classe.id}" 
-                                                   value="${requestScope[tarifKey]}"
-                                                   class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm" 
-                                                   placeholder="0.00" 
-                                                   required>
+                                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                        <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-brand-500 rounded-full"></span>
+                                            ${classe.nom}
+                                        </h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <c:forEach items="${typePassagers}" var="type">
+                                                <c:set var="tarifKey" value="tarif_${classe.id}_${type.id}" />
+                                                <div>
+                                                    <label for="tarif_${classe.id}_${type.id}" class="block text-[10px] font-medium text-gray-400 mb-1">Passager: ${type.nom}</label>
+                                                    <div class="relative">
+                                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                            <span class="text-gray-400 text-xs">Ar</span>
+                                                        </div>
+                                                        <input type="number" 
+                                                               step="0.01" 
+                                                               name="tarif_${classe.id}_${type.id}" 
+                                                               id="tarif_${classe.id}_${type.id}" 
+                                                               value="${requestScope[tarifKey]}"
+                                                               class="w-full pl-8 pr-4 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-transparent text-sm" 
+                                                               placeholder="Tarif pour ${type.nom}" 
+                                                               required>
+                                                    </div>
+                                                </div>
+                                            </c:forEach>
                                         </div>
                                     </div>
                                 </c:forEach>

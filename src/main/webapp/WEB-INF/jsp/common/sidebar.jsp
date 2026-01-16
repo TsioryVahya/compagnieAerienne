@@ -94,6 +94,13 @@
             Classes
         </a>
 
+        <a href="/type-passager" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md group transition-all duration-200 <%= "type-passager".equals(activePage) ? "bg-white text-brand-600 shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" %>">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-colors <%= "type-passager".equals(activePage) ? "text-brand-500" : "text-gray-400 group-hover:text-gray-500" %>">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            Types de Passager
+        </a>
+
         <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 hover:text-gray-900 group">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400 group-hover:text-gray-500">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.425 15.17V8.625c0-1.78-1.442-3.223-3.223-3.223h3.224m0 0h.01m-6.845 0a3.224 3.224 0 00-3.222 3.223v6.52" />

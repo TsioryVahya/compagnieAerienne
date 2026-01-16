@@ -48,6 +48,9 @@ public class VolProgrammationController {
     private com.companieaerienne.services.StatutVolService statutVolService;
 
     @Autowired
+    private com.companieaerienne.services.TypePassagerService typePassagerService;
+
+    @Autowired
     private com.companieaerienne.services.AvionService avionService;
 
     @GetMapping
@@ -125,23 +128,51 @@ public class VolProgrammationController {
         // Calculer le chiffre d'affaires
         BigDecimal totalRevenue = volProgrammationService.calculateRevenue(programmation);
 
-        // Calculer les revenus potentiels par classe et total
-        Map<Integer, BigDecimal> potentialRevenueByClasse = new HashMap<>();
-        Map<Integer, BigDecimal> tariffsByClasse = new HashMap<>();
-        BigDecimal totalPotentialRevenue = BigDecimal.ZERO;
+        // Calculer les revenus par classe et par type de passager
+        Map<Integer, Map<Integer, Integer>> countByClasseAndType = new HashMap<>();
+        Map<Integer, Map<Integer, BigDecimal>> revenueByClasseAndType = new HashMap<>();
+        
+        for (com.companieaerienne.entities.Reservation res : programmation.getReservations()) {
+            if (res.getDetailsPlaces() != null) {
+                for (com.companieaerienne.entities.ReservationPlace rp : res.getDetailsPlaces()) {
+                    // Trouver la classe du siège
+                    final int place = rp.getPlace();
+                    ClassePlace cp = configurations.stream()
+                        .filter(conf -> place >= conf.getPlaceDebut() && place <= conf.getPlaceFin())
+                        .findFirst()
+                        .orElse(null);
+                    
+                    if (cp != null && rp.getTypePassager() != null) {
+                        int classeId = cp.getClasse().getId();
+                        int typeId = rp.getTypePassager().getId();
+                        
+                        // Compter les passagers
+                        countByClasseAndType.computeIfAbsent(classeId, k -> new HashMap<>())
+                            .merge(typeId, 1, Integer::sum);
+                        
+                        // Calculer le revenu (tarif pour cette classe et ce type)
+                        BigDecimal tarif = programmation.getTarifs().stream()
+                            .filter(t -> t.getClasse().getId().equals(classeId))
+                            .filter(t -> t.getTypePassager() != null && t.getTypePassager().getId().equals(typeId))
+                            .map(TarifVol::getTarif)
+                            .findFirst()
+                            .orElse(BigDecimal.ZERO);
+                        
+                        revenueByClasseAndType.computeIfAbsent(classeId, k -> new HashMap<>())
+                            .merge(typeId, tarif, BigDecimal::add);
+                    }
+                }
+            }
+        }
 
-        for (ClassePlace cp : configurations) {
-            BigDecimal tarif = programmation.getTarifs().stream()
-                .filter(t -> t.getClasse().getId().equals(cp.getClasse().getId()))
-                .map(TarifVol::getTarif)
-                .findFirst()
-                .orElse(BigDecimal.ZERO);
-            
-            tariffsByClasse.put(cp.getClasse().getId(), tarif);
-            int capacity = cp.getPlaceFin() - cp.getPlaceDebut() + 1;
-            BigDecimal potential = tarif.multiply(new BigDecimal(capacity));
-            potentialRevenueByClasse.put(cp.getClasse().getId(), potential);
-            totalPotentialRevenue = totalPotentialRevenue.add(potential);
+        // Calculer les revenus potentiels par classe (en utilisant le tarif adulte ou le tarif moyen?)
+        // Pour simplifier, on va juste passer tous les tarifs à la vue
+        Map<Integer, Map<Integer, BigDecimal>> allTariffs = new HashMap<>();
+        for (TarifVol t : programmation.getTarifs()) {
+            if (t.getTypePassager() != null) {
+                allTariffs.computeIfAbsent(t.getClasse().getId(), k -> new HashMap<>())
+                    .put(t.getTypePassager().getId(), t.getTarif());
+            }
         }
 
         // Trouver le statut actuel
@@ -154,13 +185,14 @@ public class VolProgrammationController {
         model.addAttribute("programmation", programmation);
         model.addAttribute("reservations", programmation.getReservations());
         model.addAttribute("tarifs", programmation.getTarifs());
+        model.addAttribute("typePassagers", typePassagerService.findAll());
         model.addAttribute("configurations", configurations);
         model.addAttribute("availableSeats", availableSeatsByClasse);
         model.addAttribute("occupiedCountByClasse", occupiedCountByClasse);
         model.addAttribute("totalRevenue", totalRevenue);
-        model.addAttribute("potentialRevenueByClasse", potentialRevenueByClasse);
-        model.addAttribute("tariffsByClasse", tariffsByClasse);
-        model.addAttribute("totalPotentialRevenue", totalPotentialRevenue);
+        model.addAttribute("countByClasseAndType", countByClasseAndType);
+        model.addAttribute("revenueByClasseAndType", revenueByClasseAndType);
+        model.addAttribute("allTariffs", allTariffs);
         model.addAttribute("allStatuts", statutVolService.findAll());
         model.addAttribute("activePage", "programmation");
         return "vol-programmation/details";
@@ -171,6 +203,7 @@ public class VolProgrammationController {
         model.addAttribute("vols", volService.findAll());
         model.addAttribute("avions", avionService.findAll());
         model.addAttribute("classes", classeService.findAll());
+        model.addAttribute("typePassagers", typePassagerService.findAll());
         model.addAttribute("programmation", new VolProgrammation());
         model.addAttribute("activePage", "programmation");
         return "vol-programmation/create";
@@ -182,12 +215,17 @@ public class VolProgrammationController {
         model.addAttribute("vols", volService.findAll());
         model.addAttribute("avions", avionService.findAll());
         model.addAttribute("classes", classeService.findAll());
+        model.addAttribute("typePassagers", typePassagerService.findAll());
         model.addAttribute("programmation", programmation);
         
         // Charger les tarifs existants pour les pré-remplir dans le formulaire
         List<TarifVol> tarifs = tarifVolService.findByVolProgrammationId(programmation.getId());
         tarifs.forEach(t -> {
-            model.addAttribute("tarif_" + t.getClasse().getId(), t.getTarif());
+            String key = "tarif_" + t.getClasse().getId();
+            if (t.getTypePassager() != null) {
+                key += "_" + t.getTypePassager().getId();
+            }
+            model.addAttribute(key, t.getTarif());
         });
 
         // Charger le statut actuel
@@ -207,29 +245,35 @@ public class VolProgrammationController {
         boolean isNew = programmation.getId() == null;
         VolProgrammation savedProg = volProgrammationService.save(programmation);
         
-        // Enregistrer les tarifs pour chaque classe
+        // Enregistrer les tarifs pour chaque classe et type de passager
         List<TarifVol> existingTarifs = tarifVolService.findByVolProgrammationId(savedProg.getId());
+        List<com.companieaerienne.entities.Classe> classes = classeService.findAll();
+        List<com.companieaerienne.entities.TypePassager> typePassagers = typePassagerService.findAll();
         
-        classeService.findAll().forEach(classe -> {
-            String tarifKey = "tarif_" + classe.getId();
-            if (allParams.containsKey(tarifKey)) {
-                try {
-                    BigDecimal tarifValue = new BigDecimal(allParams.get(tarifKey));
-                    
-                    // Chercher si un tarif existe déjà pour cette classe
-                    TarifVol tarif = existingTarifs.stream()
-                        .filter(t -> t.getClasse().getId().equals(classe.getId()))
-                        .findFirst()
-                        .orElse(new TarifVol());
-                    
-                    tarif.setVolProgrammation(savedProg);
-                    tarif.setClasse(classe);
-                    tarif.setTarif(tarifValue);
-                    tarifVolService.save(tarif);
-                } catch (NumberFormatException e) {
-                    // Log error or ignore
+        classes.forEach(classe -> {
+            typePassagers.forEach(type -> {
+                String tarifKey = "tarif_" + classe.getId() + "_" + type.getId();
+                if (allParams.containsKey(tarifKey)) {
+                    try {
+                        BigDecimal tarifValue = new BigDecimal(allParams.get(tarifKey));
+                        
+                        // Chercher si un tarif existe déjà pour cette classe et ce type
+                        TarifVol tarif = existingTarifs.stream()
+                            .filter(t -> t.getClasse().getId().equals(classe.getId()))
+                            .filter(t -> t.getTypePassager() != null && t.getTypePassager().getId().equals(type.getId()))
+                            .findFirst()
+                            .orElse(new TarifVol());
+                        
+                        tarif.setVolProgrammation(savedProg);
+                        tarif.setClasse(classe);
+                        tarif.setTypePassager(type);
+                        tarif.setTarif(tarifValue);
+                        tarifVolService.save(tarif);
+                    } catch (NumberFormatException e) {
+                        // Log error or ignore
+                    }
                 }
-            }
+            });
         });
 
         // Gérer le statut

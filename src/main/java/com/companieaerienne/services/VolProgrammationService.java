@@ -51,9 +51,12 @@ public class VolProgrammationService {
         BigDecimal total = BigDecimal.ZERO;
         
         for (com.companieaerienne.entities.Reservation res : programmation.getReservations()) {
-            if (res.getPlacesSelectionnees() == null || res.getPlacesSelectionnees().isEmpty()) continue;
+            if (res.getDetailsPlaces() == null || res.getDetailsPlaces().isEmpty()) continue;
             
-            for (Integer seatNum : res.getPlacesSelectionnees()) {
+            for (com.companieaerienne.entities.ReservationPlace resPlace : res.getDetailsPlaces()) {
+                Integer seatNum = resPlace.getPlace();
+                Integer typePassagerId = resPlace.getTypePassager() != null ? resPlace.getTypePassager().getId() : null;
+                
                 // Déterminer la classe de ce siège
                 Integer classeId = configurations.stream()
                     .filter(cp -> seatNum >= cp.getPlaceDebut() && seatNum <= cp.getPlaceFin())
@@ -64,6 +67,7 @@ public class VolProgrammationService {
                 if (classeId != null) {
                     BigDecimal tarif = programmation.getTarifs().stream()
                         .filter(t -> t.getClasse().getId().equals(classeId))
+                        .filter(t -> typePassagerId == null || (t.getTypePassager() != null && t.getTypePassager().getId().equals(typePassagerId)))
                         .map(TarifVol::getTarif)
                         .findFirst()
                         .orElse(BigDecimal.ZERO);

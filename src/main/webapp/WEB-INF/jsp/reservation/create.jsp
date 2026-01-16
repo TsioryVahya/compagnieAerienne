@@ -121,8 +121,14 @@
                                     <!-- La pagination sera générée dynamiquement -->
                                 </div>
 
-                                <!-- Input caché pour stocker les places sélectionnées -->
-                                <input type="hidden" id="selectedSeats" name="placesSelectionnees" value="">
+                                <!-- Liste des places sélectionnées avec types de passager -->
+                                <div id="selectedSeatsDetails" class="mt-8 space-y-4 hidden">
+                                    <h4 class="text-sm font-bold text-gray-900 border-b pb-2">Détails des Passagers</h4>
+                                    <div id="seatsDetailsList" class="space-y-3">
+                                        <!-- Généré dynamiquement -->
+                                    </div>
+                                </div>
+
                                 <div class="mt-4 text-sm text-gray-600">
                                     Places sélectionnées: <span id="selectedSeatsDisplay" class="font-bold text-brand-600">Aucune</span>
                                 </div>
@@ -148,16 +154,23 @@
     <script>
         // Gestion de la sélection des sièges
         const nombrePlacesInput = document.getElementById('nombrePlaces');
-        const selectedSeatsInput = document.getElementById('selectedSeats');
         const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
+        const seatsDetailsList = document.getElementById('seatsDetailsList');
+        const selectedSeatsDetails = document.getElementById('selectedSeatsDetails');
         const seatsContainer = document.getElementById('seatsContainer');
         const paginationContainer = document.getElementById('paginationContainer');
         const volSelect = document.getElementById('vol');
-        const classeSelect = document.getElementById('classe');
         const volProgrammationSelect = document.getElementById('volProgrammation');
         const volProgrammationDisplay = document.getElementById('volProgrammationDisplay');
         const initialVolProgrammationId = '${selectedVolProgrammationId}';
         let initialVolProgrammationApplied = false;
+        
+        // Liste des types de passagers injectée par JSP
+        const typePassagers = [
+            <c:forEach items="${typePassagers}" var="t" varStatus="status">
+                { id: ${t.id}, nom: '${t.nom}' }${!status.last ? ',' : ''}
+            </c:forEach>
+        ];
         
         let selectedSeats = [];
         let plageDebut = 1;
@@ -444,25 +457,55 @@
         });
 
         function updateDisplay() {
-            selectedSeatsInput.value = selectedSeats.join(',');
-            let displayText = 'Aucune';
             if (selectedSeats.length > 0) {
-                const sorted = selectedSeats.map(s => parseInt(s)).sort((a, b) => a - b);
-                
-                // Grouper par classe
-                const classGroups = {};
-                sorted.forEach(seatNum => {
-                    const classeInfo = avionClasses.find(c => seatNum >= c.placeDebut && seatNum <= c.placeFin);
-                    const className = classeInfo ? classeInfo.classe.nom : 'Inconnue';
-                    if (!classGroups[className]) classGroups[className] = [];
-                    classGroups[className].push(seatNum);
-                });
-                
-                displayText = Object.entries(classGroups)
-                    .map(([className, seats]) => className + ': ' + seats.join(', '))
-                    .join(' | ');
+                selectedSeatsDisplay.textContent = selectedSeats.sort((a, b) => a - b).join(', ');
+                selectedSeatsDetails.classList.remove('hidden');
+            } else {
+                selectedSeatsDisplay.textContent = 'Aucune';
+                selectedSeatsDetails.classList.add('hidden');
             }
-            selectedSeatsDisplay.textContent = displayText;
+            
+            // Mettre à jour la liste des détails des passagers
+            updateSeatsDetailsList();
+        }
+
+        function updateSeatsDetailsList() {
+            const currentDetails = Array.from(seatsDetailsList.querySelectorAll('.seat-detail-item')).reduce((acc, el) => {
+                const seatNum = el.dataset.seat;
+                const typeId = el.querySelector('select').value;
+                acc[seatNum] = typeId;
+                return acc;
+            }, {});
+
+            seatsDetailsList.innerHTML = '';
+            selectedSeats.sort((a, b) => a - b).forEach((seat, index) => {
+                const item = document.createElement('div');
+                item.className = 'seat-detail-item flex items-center justify-between bg-white p-3 rounded border border-gray-100 shadow-sm';
+                item.dataset.seat = seat;
+                
+                const seatNum = parseInt(seat);
+                const classeInfo = avionClasses.find(c => seatNum >= c.placeDebut && seatNum <= c.placeFin);
+                const classeName = classeInfo ? classeInfo.classe.nom : 'Inconnue';
+
+                item.innerHTML = 
+                    '<div class="flex items-center gap-3">' +
+                        '<span class="w-8 h-8 bg-brand-600 text-white rounded-full flex items-center justify-center font-bold text-xs">' + seat + '</span>' +
+                        '<div>' +
+                            '<div class="text-xs font-bold text-gray-900">Siège ' + seat + '</div>' +
+                            '<div class="text-[10px] text-gray-500">' + classeName + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-2">' +
+                        '<label class="text-[10px] font-bold text-gray-400 uppercase">Type:</label>' +
+                        '<input type="hidden" name="detailsPlaces[' + index + '].place" value="' + seat + '">' +
+                        '<select name="detailsPlaces[' + index + '].typePassager.id" class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-brand-500 outline-none">' +
+                            typePassagers.map(function(t) { 
+                                return '<option value="' + t.id + '"' + (currentDetails[seat] == t.id ? ' selected' : '') + '>' + t.nom + '</option>'; 
+                            }).join('') +
+                        '</select>' +
+                    '</div>';
+                seatsDetailsList.appendChild(item);
+            });
         }
 
         // Initialiser

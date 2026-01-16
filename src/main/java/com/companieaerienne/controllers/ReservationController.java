@@ -53,6 +53,9 @@ public class ReservationController {
         return "reservation/list";
     }
 
+    @Autowired
+    private com.companieaerienne.services.TypePassagerService typePassagerService;
+
     @GetMapping("/create")
     public String createForm(@RequestParam(required = false) Integer volId,
                              @RequestParam(required = false) Integer volProgrammationId,
@@ -60,6 +63,7 @@ public class ReservationController {
         model.addAttribute("activePage", "reservations");
         model.addAttribute("vols", volService.findAll());
         model.addAttribute("clients", clientService.findAll());
+        model.addAttribute("typePassagers", typePassagerService.findAll());
         model.addAttribute("reservation", new Reservation());
         
         // Si un vol spécifique est demandé, le pré-sélectionner
