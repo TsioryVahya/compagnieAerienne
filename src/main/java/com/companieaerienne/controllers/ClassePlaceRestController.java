@@ -43,9 +43,14 @@ public class ClassePlaceRestController {
     }
     
     @GetMapping("/places-occupees/{volProgrammationId}")
-    public List<Integer> getPlacesOccupees(@PathVariable Integer volProgrammationId) {
+    public List<Integer> getPlacesOccupees(@PathVariable Integer volProgrammationId, @RequestParam(required = false) Integer excludeReservationId) {
         System.out.println("Récupération des places occupées pour la programmation: " + volProgrammationId);
-        List<Integer> occupiedSeats = reservationService.getOccupiedSeats(volProgrammationId);
+        List<Integer> occupiedSeats;
+        if (excludeReservationId != null) {
+            occupiedSeats = reservationService.getOccupiedSeatsExcluding(volProgrammationId, excludeReservationId);
+        } else {
+            occupiedSeats = reservationService.getOccupiedSeats(volProgrammationId);
+        }
         System.out.println("Places occupées: " + occupiedSeats);
         return occupiedSeats;
     }

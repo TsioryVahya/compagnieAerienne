@@ -1,8 +1,10 @@
 package com.companieaerienne.controllers;
 
 import com.companieaerienne.entities.RemiseTarif;
+import com.companieaerienne.entities.TarifVol;
 import com.companieaerienne.repositories.ClasseRepository;
 import com.companieaerienne.repositories.RemiseTarifRepository;
+import com.companieaerienne.repositories.TarifVolRepository;
 import com.companieaerienne.repositories.TypePassagerRepository;
 import com.companieaerienne.repositories.VolProgrammationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 
 @Controller
 @RequestMapping("/remise-tarif")
@@ -30,6 +34,9 @@ public class RemiseTarifRestController {
     @Autowired
     private TypePassagerRepository typePassagerRepository;
 
+    @Autowired
+    private TarifVolRepository tarifVolRepository;
+
     @PostMapping("/save-quick")
     public ResponseEntity<?> saveQuick(
             @RequestParam("id_vol_programmation") Integer volProgId,
@@ -40,7 +47,7 @@ public class RemiseTarifRestController {
             @RequestParam("formule") String formule) {
 
         try {
-            // Chercher si une remise spécifique existe déjà pour ce vol/classe/type
+            // 1. Enregistrer la remise
             RemiseTarif entity = remiseTarifRepository
                     .findByVolProgrammationIdAndClasseIdAndTypePassagerAppliquerId(volProgId, classeId, appliquerId)
                     .orElse(new RemiseTarif());
@@ -53,8 +60,47 @@ public class RemiseTarifRestController {
             entity.setFormule(formule);
 
             remiseTarifRepository.save(entity);
+
+            // 2. Mettre à jour les tarifs impactés immédiatement dans la base
+            List<TarifVol> tarifs = tarifVolRepository.findByVolProgrammationId(volProgId);
+            
+            // Trouver le tarif de référence
+            TarifVol refTarif = tarifs.stream()
+                .filter(t -> t.getClasse().getId().equals(classeId))
+                .filter(t -> t.getTypePassager().getId().equals(referenceId))
+                .findFirst()
+                .orElse(null);
+
+            if (refTarif != null) {
+                BigDecimal baseValue = refTarif.getTarif();
+                BigDecimal newValue = BigDecimal.ZERO;
+
+                if ("%".equals(formule)) {
+                    newValue = baseValue.multiply(remise).divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+                } else if ("-".equals(formule)) {
+                    newValue = baseValue.subtract(remise);
+                }
+
+                if (newValue.compareTo(BigDecimal.ZERO) < 0) newValue = BigDecimal.ZERO;
+
+                // Trouver ou créer le tarif cible
+                TarifVol targetTarif = tarifs.stream()
+                    .filter(t -> t.getClasse().getId().equals(classeId))
+                    .filter(t -> t.getTypePassager().getId().equals(appliquerId))
+                    .findFirst()
+                    .orElse(new TarifVol());
+
+                targetTarif.setVolProgrammation(entity.getVolProgrammation());
+                targetTarif.setClasse(entity.getClasse());
+                targetTarif.setTypePassager(entity.getTypePassagerAppliquer());
+                targetTarif.setTarif(newValue);
+                
+                tarifVolRepository.save(targetTarif);
+            }
+
             return ResponseEntity.ok().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

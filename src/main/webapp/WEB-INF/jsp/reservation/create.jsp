@@ -17,7 +17,7 @@
                 
                 <!-- Page Header with Breadcrumb -->
                 <div class="mb-8">
-                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Nouvelle Réservation</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">${reservation.id != null ? 'Modifier la' : 'Nouvelle'} Réservation</h1>
                     <!-- Breadcrumb -->
                     <nav class="flex" aria-label="Breadcrumb">
                         <ol class="inline-flex items-center space-x-1 md:space-x-2">
@@ -46,6 +46,7 @@
                 <!-- Form Card -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <form action="/reservations" method="post" class="space-y-6">
+                        <input type="hidden" name="id" value="${reservation.id}">
                         
                         <!-- Vol Selection -->
                         <div>
@@ -80,19 +81,37 @@
                             <select class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" id="client" name="client.id" required>
                                 <option value="">Sélectionnez un client</option>
                                 <c:forEach items="${clients}" var="cl">
-                                    <option value="${cl.id}">${cl.nom} ${cl.prenom} - ${cl.email}</option>
+                                    <option value="${cl.id}" ${reservation.client.id == cl.id ? 'selected' : ''}>${cl.nom} ${cl.prenom} - ${cl.email}</option>
                                 </c:forEach>
                             </select>
                         </div>
 
-                        <!-- Nombre de Places -->
-                        <div>
-                            <label for="nombrePlaces" class="block text-sm font-medium text-gray-700 mb-2">Nombre de Places</label>
-                            <input type="number" min="1" max="100" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" id="nombrePlaces" name="nombrePlaces" value="1" required>
+                        <div class="flex items-end gap-4">
+                            <div class="flex-1">
+                                <label for="nombrePlaces" class="block text-sm font-medium text-gray-700 mb-2">Nombre total de Places</label>
+                                <input type="number" min="1" max="100" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" id="nombrePlaces" name="nombrePlaces" value="${reservation.id != null ? reservation.nombrePlaces : 1}" required>
+                            </div>
+                            <div class="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                                <button type="button" id="btnModePlan" class="px-4 py-2 text-sm font-medium rounded-md bg-white shadow-sm text-brand-600">Plan de salle</button>
+                                <button type="button" id="btnModeManuel" class="px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900">Saisie manuelle</button>
+                            </div>
                         </div>
 
-                        <!-- Sélection des Places -->
-                        <div>
+                        <!-- Saisie Manuelle (Cachée par défaut) -->
+                        <div id="manualInputSection" class="hidden space-y-4 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                            <h3 class="text-sm font-bold text-gray-900 border-b pb-2 mb-4">Répartition Manuelle des Places</h3>
+                            <div id="manualGridContainer" class="overflow-x-auto">
+                                <!-- Généré dynamiquement : Table Type Passager x Classe -->
+                            </div>
+                            <div class="flex justify-end mt-4">
+                                <button type="button" onclick="applyManualReservation()" class="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium">
+                                    Attribuer les places
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sélection des Places (Plan de salle) -->
+                        <div id="seatMapSection">
                             <label class="block text-sm font-medium text-gray-700 mb-3">Sélection des Places</label>
                             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
                                 <!-- Légende -->
@@ -135,7 +154,6 @@
                             </div>
                         </div>
 
-                        <!-- Actions -->
                         <div class="flex gap-3 pt-4">
                             <button type="submit" class="bg-brand-600 text-white px-6 py-2 rounded-md hover:bg-brand-700 shadow-sm transition-colors text-sm font-medium">
                                 Enregistrer la réservation
@@ -163,7 +181,22 @@
         const volProgrammationSelect = document.getElementById('volProgrammation');
         const volProgrammationDisplay = document.getElementById('volProgrammationDisplay');
         const initialVolProgrammationId = '${selectedVolProgrammationId}';
+        const currentReservationId = '${reservation.id}';
         let initialVolProgrammationApplied = false;
+
+        // Données de la réservation actuelle pour le pré-remplissage en mode modification
+        const currentReservationSeats = [
+            <c:forEach items="${reservation.detailsPlaces}" var="rp" varStatus="status">
+                { place: "${rp.place}", typeId: ${rp.typePassager.id} }${!status.last ? ',' : ''}
+            </c:forEach>
+        ];
+
+        // Éléments pour le mode manuel
+        const btnModePlan = document.getElementById('btnModePlan');
+        const btnModeManuel = document.getElementById('btnModeManuel');
+        const manualInputSection = document.getElementById('manualInputSection');
+        const seatMapSection = document.getElementById('seatMapSection');
+        const manualGridContainer = document.getElementById('manualGridContainer');
         
         // Liste des types de passagers injectée par JSP
         const typePassagers = [
@@ -180,6 +213,184 @@
         const seatsPerPage = 36; // 6 rangées × 6 sièges
         const seatsPerRow = 6;
         let avionClasses = []; // Stocke les plages de sièges par classe pour l'avion actuel
+
+        // Gestion du basculement de mode
+        btnModePlan.addEventListener('click', () => {
+            btnModePlan.classList.add('bg-white', 'shadow-sm', 'text-brand-600');
+            btnModePlan.classList.remove('text-gray-600');
+            btnModeManuel.classList.remove('bg-white', 'shadow-sm', 'text-brand-600');
+            btnModeManuel.classList.add('text-gray-600');
+            manualInputSection.classList.add('hidden');
+            seatMapSection.classList.remove('hidden');
+            nombrePlacesInput.readOnly = false; // Permettre l'édition en mode plan de salle
+        });
+
+        btnModeManuel.addEventListener('click', () => {
+            btnModeManuel.classList.add('bg-white', 'shadow-sm', 'text-brand-600');
+            btnModeManuel.classList.remove('text-gray-600');
+            btnModePlan.classList.remove('bg-white', 'shadow-sm', 'text-brand-600');
+            btnModePlan.classList.add('text-gray-600');
+            manualInputSection.classList.remove('hidden');
+            seatMapSection.classList.add('hidden');
+            nombrePlacesInput.readOnly = true; // Verrouiller en mode manuel (calculé par la grille)
+            generateManualGrid();
+        });
+
+        function generateManualGrid() {
+            if (avionClasses.length === 0) {
+                manualGridContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Veuillez d\'abord sélectionner un vol et une date.</p>';
+                return;
+            }
+
+            // Récupérer les classes uniques
+            const classes = [];
+            avionClasses.forEach(ac => {
+                const classObj = ac.classe || { id: ac.id_classe, nom: 'Classe ' + ac.id_classe };
+                if (!classes.find(c => c.id === classObj.id)) {
+                    classes.push(classObj);
+                }
+            });
+
+            let html = '<table class="min-w-full divide-y divide-gray-200 border">';
+            html += '<thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Type Passager</th>';
+            classes.forEach(c => {
+                const availableCount = countAvailableSeatsForClass(c.id);
+                html += '<th class="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase">' + 
+                        c.nom + '<br><span class="text-[10px] font-normal text-brand-600">(' + availableCount + ' dispo)</span></th>';
+            });
+            html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+
+            typePassagers.forEach(tp => {
+                html += '<tr><td class="px-4 py-2 text-sm font-medium text-gray-900">' + tp.nom + '</td>';
+                classes.forEach(c => {
+                    html += '<td class="px-4 py-2 text-center">' +
+                                '<input type="number" min="0" value="0" ' +
+                                    'class="manual-count-input w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm" ' +
+                                    'data-type-id="' + tp.id + '" data-classe-id="' + c.id + '" ' +
+                                    'onchange="updateTotalManualCount()">' +
+                             '</td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            manualGridContainer.innerHTML = html;
+        }
+
+        function countAvailableSeatsForClass(classeId) {
+            let count = 0;
+            for (let s = 1; s <= plageFin; s++) {
+                const classeInfo = avionClasses.find(c => s >= c.placeDebut && s <= c.placeFin);
+                if (classeInfo) {
+                    const currentId = (classeInfo.classe && classeInfo.classe.id) ? classeInfo.classe.id : classeInfo.id_classe;
+                    if (currentId == classeId) {
+                        const isOccupied = occupiedSeats.some(os => os == s);
+                        if (!isOccupied) count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        function updateTotalManualCount() {
+            let total = 0;
+            document.querySelectorAll('.manual-count-input').forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            nombrePlacesInput.value = total;
+        }
+
+        function applyManualReservation() {
+            const counts = [];
+            const classTotals = {};
+
+            document.querySelectorAll('.manual-count-input').forEach(input => {
+                const count = parseInt(input.value) || 0;
+                if (count > 0) {
+                    const typeId = parseInt(input.dataset.typeId);
+                    const classeId = parseInt(input.dataset.classeId);
+                    
+                    counts.push({
+                        typeId: typeId,
+                        classeId: classeId,
+                        count: count
+                    });
+
+                    classTotals[classeId] = (classTotals[classeId] || 0) + count;
+                }
+            });
+
+            if (counts.length === 0) {
+                alert("Veuillez saisir au moins une place.");
+                return;
+            }
+
+            // Vérifier la disponibilité totale par classe avant de commencer
+            for (const [classeId, totalRequested] of Object.entries(classTotals)) {
+                const available = countAvailableSeatsForClass(classeId);
+                if (totalRequested > available) {
+                    alert("Pas assez de places disponibles en " + getClassNom(classeId) + ".\n" +
+                          "Total demandé : " + totalRequested + "\n" +
+                          "Disponible : " + available);
+                    return;
+                }
+            }
+
+            // Réinitialiser les sièges sélectionnés
+            selectedSeats = [];
+            window.manualTypeMapping = {};
+            
+            // Pour chaque demande (Type x Classe), trouver des sièges disponibles
+            for (const request of counts) {
+                const availableInClass = findAvailableSeatsInClass(request.classeId, request.count);
+                
+                availableInClass.forEach(seatNum => {
+                    const s = seatNum.toString();
+                    selectedSeats.push(s);
+                    window.manualTypeMapping[s] = request.typeId;
+                });
+            }
+
+            updateSeatStates();
+            updateDisplay();
+            
+            // Repasser en mode plan pour voir le résultat
+            btnModePlan.click();
+            alert("Les places ont été attribuées automatiquement.");
+        }
+
+        function findAvailableSeatsInClass(classeId, count) {
+            const available = [];
+            // Parcourir tous les sièges de l'avion (de 1 à plageFin)
+            for (let s = 1; s <= plageFin; s++) {
+                // Trouver la classe pour ce siège en utilisant la même logique que l'affichage
+                const classeInfo = avionClasses.find(c => s >= c.placeDebut && s <= c.placeFin);
+                
+                if (classeInfo) {
+                    // Vérifier si la classe correspond (comparaison flexible)
+                    const currentClasseId = (classeInfo.classe && classeInfo.classe.id) ? classeInfo.classe.id : classeInfo.id_classe;
+                    
+                    if (currentClasseId == classeId) {
+                        // Vérifier si le siège est occupé ou déjà sélectionné
+                        const isOccupied = occupiedSeats.some(os => os == s);
+                        const isSelected = selectedSeats.some(ss => ss == s);
+                        
+                        if (!isOccupied && !isSelected) {
+                            available.push(s);
+                            if (available.length === count) return available;
+                        }
+                    }
+                }
+            }
+            return available;
+        }
+
+        function getClassNom(classeId) {
+            const ac = avionClasses.find(ac => {
+                const currentId = (ac.classe && ac.classe.id) ? ac.classe.id : ac.id_classe;
+                return currentId == classeId;
+            });
+            return ac ? (ac.classe ? ac.classe.nom : 'Classe ' + classeId) : 'Inconnue';
+        }
 
         // Écouter le changement de vol pour charger les programmations disponibles
         volSelect.addEventListener('change', async function() {
@@ -201,72 +412,77 @@
                         const option = document.createElement('option');
                         option.value = prog.id;
                         const date = new Date(prog.dateHeure);
-                        option.textContent = date.toLocaleString('fr-FR');
-                        option.dataset.display = option.textContent;
+                        option.textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString().substring(0, 5);
                         option.dataset.avionId = prog.avionId;
                         option.dataset.avionCapacite = prog.avionCapacite;
                         volProgrammationSelect.appendChild(option);
                     });
                     volProgrammationSelect.disabled = false;
 
+                    // Si on a un ID pré-sélectionné (via URL)
                     if (initialVolProgrammationId && !initialVolProgrammationApplied) {
-                        const optionToSelect = Array.from(volProgrammationSelect.options)
-                            .find(o => o.value === initialVolProgrammationId);
-                        if (optionToSelect) {
-                            volProgrammationSelect.value = initialVolProgrammationId;
-                            volProgrammationSelect.dispatchEvent(new Event('change'));
-                            initialVolProgrammationApplied = true;
-                        }
+                        volProgrammationSelect.value = initialVolProgrammationId;
+                        initialVolProgrammationApplied = true;
+                        volProgrammationSelect.dispatchEvent(new Event('change'));
                     }
-                } else {
-                     const option = document.createElement('option');
-                     option.textContent = "Aucune date disponible";
-                     volProgrammationSelect.appendChild(option);
                 }
             } catch (error) {
                 console.error('Erreur lors du chargement des programmations:', error);
             }
         });
 
-        // Écouter le changement de programmation pour mettre à jour les places occupées
+        // Écouter le changement de programmation pour charger les places occupées, les classes et les tarifs
         volProgrammationSelect.addEventListener('change', async function() {
-            const selectedOption = volProgrammationSelect.options[volProgrammationSelect.selectedIndex];
-            if (selectedOption && selectedOption.value) {
-                const displayText = selectedOption.dataset.display || selectedOption.textContent;
-                volProgrammationDisplay.textContent = 'Date choisie : ' + displayText;
-                volProgrammationDisplay.classList.remove('hidden');
-                
-                const avionId = selectedOption.dataset.avionId;
-                const avionCapacite = selectedOption.dataset.avionCapacite;
-                
-                if (avionId) {
-                    // Charger les configurations de classe pour cet avion
-                    try {
-                        const response = await fetch('/api/avion/' + avionId + '/classes-places');
-                        avionClasses = await response.json();
-                        
-                        // Définir la plage totale de l'avion pour la grille
-                        plageDebut = 1;
-                        plageFin = parseInt(avionCapacite) || 36;
-                        currentPage = 1;
-                        selectedSeats = [];
-                        
-                        await updateAvailableSeats();
-                    } catch (error) {
-                        console.error('Erreur lors du chargement des classes de l\'avion:', error);
-                    }
-                }
-            } else {
+            const vpId = this.value;
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (!vpId) {
                 volProgrammationDisplay.textContent = '';
                 volProgrammationDisplay.classList.add('hidden');
                 avionClasses = [];
                 seatsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Veuillez sélectionner un vol et une date</p>';
                 paginationContainer.innerHTML = '';
+                return;
+            }
+
+            const avionId = selectedOption.dataset.avionId;
+            const avionCapacite = selectedOption.dataset.avionCapacite;
+            
+            // Mettre à jour la plage de fin si on a la capacité de l'avion
+            if (avionCapacite) {
+                plageFin = parseInt(avionCapacite);
+            }
+
+            try {
+                // Charger les places occupées et les classes en parallèle
+                const urlOccupied = '/api/places-occupees/' + vpId + (currentReservationId ? '?excludeReservationId=' + currentReservationId : '');
+                const [occupiedResponse, classesResponse] = await Promise.all([
+                    fetch(urlOccupied),
+                    fetch('/api/avion/' + avionId + '/classes-places')
+                ]);
+
+                occupiedSeats = await occupiedResponse.json();
+                avionClasses = await classesResponse.json();
+
+                // Pré-remplir les sièges si on est en mode modification
+                if (currentReservationId && selectedSeats.length === 0) {
+                    currentReservationSeats.forEach(rs => {
+                        selectedSeats.push(rs.place);
+                    });
+                }
+
+                currentPage = 1;
+                generateSeats();
+                updateSeatStates();
+                updateDisplay();
+                generateManualGrid(); // Mettre à jour le grid manuel aussi
+            } catch (error) {
+                console.error('Erreur lors du chargement des données de la programmation:', error);
             }
         });
 
         // Fonction pour générer la grille de sièges
-        function generateSeats() {
+         function generateSeats() {
             const totalSeats = plageFin - plageDebut + 1;
             const totalPages = Math.ceil(totalSeats / seatsPerPage);
             
@@ -334,8 +550,8 @@
             }
             btn.innerHTML = innerContent;
             
-            // Vérifier si la place est occupée
-            const isOccupied = occupiedSeats.includes(parseInt(seatNum));
+            // Vérifier si la place est occupée (comparaison flexible)
+            const isOccupied = occupiedSeats.some(os => os == seatNum);
             
             if (isOccupied) {
                 btn.classList.add('bg-red-200', 'border-2', 'border-red-400', 'cursor-not-allowed');
@@ -423,8 +639,8 @@
             const seatButtons = document.querySelectorAll('.seat-btn');
             seatButtons.forEach(btn => {
                 const seatNum = btn.dataset.seat;
-                const isSelected = selectedSeats.includes(seatNum);
-                const isOccupied = occupiedSeats.includes(parseInt(seatNum));
+                const isSelected = selectedSeats.some(ss => ss == seatNum);
+                const isOccupied = occupiedSeats.some(os => os == seatNum);
 
                 if (isSelected) {
                     btn.classList.remove('bg-green-100', 'border-green-300', 'text-gray-900');
@@ -487,6 +703,7 @@
         }
 
         function updateSeatsDetailsList() {
+            // Créer un mapping des types de passagers actuels pour préserver les choix de l'utilisateur
             const currentDetails = Array.from(seatsDetailsList.querySelectorAll('.seat-detail-item')).reduce((acc, el) => {
                 const seatNum = el.dataset.seat;
                 const typeId = el.querySelector('select').value;
@@ -502,7 +719,21 @@
                 
                 const seatNum = parseInt(seat);
                 const classeInfo = avionClasses.find(c => seatNum >= c.placeDebut && seatNum <= c.placeFin);
-                const classeName = classeInfo ? classeInfo.classe.nom : 'Inconnue';
+                const classeName = classeInfo ? (classeInfo.classe ? classeInfo.classe.nom : 'Classe ' + classeInfo.id_classe) : 'Inconnue';
+
+                // Priorité au mapping manuel si défini, sinon au type déjà sélectionné, sinon au type de la réservation existante
+                let selectedType = currentDetails[seat];
+                if (window.manualTypeMapping && window.manualTypeMapping[seat]) {
+                    selectedType = window.manualTypeMapping[seat];
+                }
+                
+                // Si toujours pas de type, chercher dans les données de la réservation initiale
+                if (!selectedType && currentReservationId) {
+                    const originalSeat = currentReservationSeats.find(rs => rs.place == seat);
+                    if (originalSeat) {
+                        selectedType = originalSeat.typeId;
+                    }
+                }
 
                 item.innerHTML = 
                     '<div class="flex items-center gap-3">' +
@@ -517,12 +748,15 @@
                         '<input type="hidden" name="detailsPlaces[' + index + '].place" value="' + seat + '">' +
                         '<select name="detailsPlaces[' + index + '].typePassager.id" class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-brand-500 outline-none">' +
                             typePassagers.map(function(t) { 
-                                return '<option value="' + t.id + '"' + (currentDetails[seat] == t.id ? ' selected' : '') + '>' + t.nom + '</option>'; 
+                                return '<option value="' + t.id + '"' + (selectedType == t.id ? ' selected' : '') + '>' + t.nom + '</option>'; 
                             }).join('') +
                         '</select>' +
                     '</div>';
                 seatsDetailsList.appendChild(item);
             });
+            
+            // Nettoyer le mapping manuel après la mise à jour de la liste
+            window.manualTypeMapping = null;
         }
 
         // Initialiser

@@ -131,11 +131,10 @@
                             <tbody class="divide-y divide-gray-100 border-t border-gray-100">
                                 <c:forEach items="${volsRecents}" var="prog">
                                     <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-3 font-medium text-brand-600">${prog.vol.numeroVol}</td>
-                                        <td class="px-6 py-3">${prog.vol.aeroportArrivee.nom} (${prog.vol.aeroportArrivee.code})</td>
+                                        <td class="px-6 py-3 font-medium text-brand-600">VOL-${prog.vol.id}</td>
+                                        <td class="px-6 py-3">${prog.vol.aeroportArrivee.nom}</td>
                                         <td class="px-6 py-3">
-                                            <fmt:parseDate value="${prog.dateHeure}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDate" type="both" />
-                                            <fmt:formatDate value="${parsedDate}" pattern="HH:mm" />
+                                            <c:out value="${prog.dateHeure.toString().substring(11, 16)}" />
                                         </td>
                                         <td class="px-6 py-3">
                                             <c:set var="statut" value="${statusMap[prog.id]}" />

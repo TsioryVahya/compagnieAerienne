@@ -36,4 +36,19 @@ public class VolRestController {
                 .toList())
             .orElse(List.of());
     }
+
+    @GetMapping("/programmation/{id}/tarifs")
+    public List<Map<String, Object>> getTarifsByProgrammation(@PathVariable Integer id) {
+        return volProgrammationService.findById(id)
+            .map(vp -> vp.getTarifs().stream()
+                .map(t -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("classeId", t.getClasse().getId());
+                    map.put("typePassagerId", t.getTypePassager().getId());
+                    map.put("tarif", t.getTarif());
+                    return map;
+                })
+                .toList())
+            .orElse(List.of());
+    }
 }

@@ -282,8 +282,8 @@
                     }
                     
                     alert("Formule appliquée et enregistrée.");
-                    // Optionnel: recharger la page pour voir les badges mis à jour
-                    // location.reload();
+                    // Recharger la page pour voir les badges mis à jour et les nouveaux tarifs calculés
+                    location.reload();
                 } else {
                     alert("Erreur lors de l'enregistrement de la formule.");
                 }
