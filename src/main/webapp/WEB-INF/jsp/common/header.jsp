@@ -431,5 +431,46 @@
         .fade-in {
             animation: fadeIn 0.5s ease-out;
         }
+        
+        /* Layout without Sidebar */
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+        }
+        
+        .main-content-wrapper {
+            flex: 1;
+            width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .main-content {
+            width: 100%;
+            max-width: 100%;
+            padding: 1.5rem;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 640px) {
+            .main-content {
+                padding: 2rem;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .main-content {
+                padding: 2.5rem;
+                max-width: 1400px;
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .main-content {
+                max-width: 1536px;
+            }
+        }
     </style>
 </head>
+<body class="main-layout">

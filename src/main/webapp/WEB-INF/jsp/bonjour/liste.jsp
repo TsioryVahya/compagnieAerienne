@@ -5,18 +5,12 @@
 
 <jsp:include page="../common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-brand-50">
-    <!-- Sidebar -->
-    <jsp:include page="../common/sidebar.jsp" />
+<!-- Top Navbar -->
+<jsp:include page="../common/navbar.jsp" />
 
-    <!-- Main Content Wrapper -->
-    <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300">
-        <!-- Top Navbar -->
-        <jsp:include page="../common/navbar.jsp" />
-
-        <!-- Main Page Content -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-brand-50 p-6">
-            <div class="container mx-auto max-w-7xl">
+<!-- Main Content Wrapper -->
+<main class="main-content-wrapper">
+    <div class="main-content">
                 
                 <!-- Page Header -->
                 <div class="mb-8 flex items-center justify-between">
@@ -72,7 +66,7 @@
                 </div>
 
             </div>
-        </main>
     </div>
+</main>
 </body>
 </html>

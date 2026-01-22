@@ -2,18 +2,12 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="../common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-brand-50">
-    <!-- Sidebar -->
-    <jsp:include page="../common/sidebar.jsp" />
+<!-- Top Navbar -->
+<jsp:include page="../common/navbar.jsp" />
 
-    <!-- Main Content Wrapper -->
-    <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300">
-        <!-- Top Navbar -->
-        <jsp:include page="../common/navbar.jsp" />
-
-        <!-- Main Page Content -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-brand-50 p-6">
-            <div class="container mx-auto">
+<!-- Main Content Wrapper -->
+<main class="main-content-wrapper">
+    <div class="main-content">
                 
                 <!-- Page Header with Breadcrumb -->
                 <div class="mb-8">
@@ -127,7 +121,7 @@
                 </c:if>
 
             </div>
-        </main>
     </div>
+</main>
 </body>
 </html>

@@ -2,14 +2,10 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="../common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-brand-50">
-    <jsp:include page="../common/sidebar.jsp" />
+<jsp:include page="../common/navbar.jsp" />
 
-    <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300">
-        <jsp:include page="../common/navbar.jsp" />
-
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-brand-50 p-6">
-            <div class="container mx-auto max-w-2xl">
+<main class="main-content-wrapper">
+    <div class="main-content" style="max-width: 48rem; margin: 0 auto;">
                 
                 <div class="mb-8">
                     <h1 class="text-2xl font-bold text-brand-900 mb-2">${vol.id != null ? 'Modifier' : 'Nouveau'} Vol</h1>
@@ -78,7 +74,7 @@
                     </form>
                 </div>
             </div>
-        </main>
     </div>
+</main>
 </body>
 </html>
