@@ -1,3 +1,4 @@
+-- Active: 1766037094748@@127.0.0.1@5432@compagnie
 CREATE TABLE avion (
     id SERIAL PRIMARY KEY,
     matricule VARCHAR(50),
