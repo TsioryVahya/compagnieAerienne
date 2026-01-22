@@ -132,3 +132,46 @@ CREATE TABLE remise_tarif (
     id_classe INTEGER REFERENCES classe(id),
     id_vol_programmation INTEGER REFERENCES vol_programmation(id)
 );
+
+-- Table des sociétés clientes
+CREATE TABLE societe (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL
+);
+
+-- Table des tarifs de publicité
+CREATE TABLE tarif_pub (
+    id SERIAL PRIMARY KEY,
+    montant DECIMAL(15,2) NOT NULL,
+    date_application DATE NOT NULL
+);
+
+-- Table des diffusions (catalogue des pubs par société)
+CREATE TABLE diffusion (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    id_societe INTEGER REFERENCES societe(id)
+);
+
+-- Table de programmation des diffusions sur les vols
+CREATE TABLE diffusion_programmation (
+    id SERIAL PRIMARY KEY,
+    id_diffusion INTEGER REFERENCES diffusion(id),
+    id_vol_programmation INTEGER REFERENCES vol_programmation(id),
+    nombre_diffusions INTEGER DEFAULT 1,
+    date_programmation DATE NOT NULL
+);
+
+-- Tables pour le paiement des publicités
+CREATE TABLE payment_diffusion (
+    id SERIAL PRIMARY KEY,
+    id_societe INTEGER REFERENCES societe(id),
+    id_diffusion_programmation INTEGER REFERENCES diffusion_programmation(id)
+);
+
+CREATE TABLE payment_details_diffusion (
+    id SERIAL PRIMARY KEY,
+    id_payment INTEGER REFERENCES payment_diffusion(id),
+    date_payment TIMESTAMP NOT NULL,
+    montant DECIMAL(15,2) NOT NULL
+);
