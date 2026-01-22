@@ -24,4 +24,8 @@ public class ReservationService {
     public List<Integer> getOccupiedSeats(Integer volProgrammationId) {
         return repository.findOccupiedSeatsByVolProgrammationId(volProgrammationId);
     }
+
+    public List<Integer> getOccupiedSeatsExcluding(Integer volProgrammationId, Integer reservationId) {
+        return repository.findOccupiedSeatsByVolProgrammationIdExcludingReservation(volProgrammationId, reservationId);
+    }
 }

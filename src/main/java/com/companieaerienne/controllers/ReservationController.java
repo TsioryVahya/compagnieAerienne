@@ -98,4 +98,23 @@ public class ReservationController {
         service.deleteById(id);
         return "redirect:/reservations";
     }
+
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Integer id, Model model) {
+        Reservation reservation = service.findById(id).orElseThrow();
+        model.addAttribute("activePage", "reservations");
+        model.addAttribute("vols", volService.findAll());
+        model.addAttribute("clients", clientService.findAll());
+        model.addAttribute("typePassagers", typePassagerService.findAll());
+        model.addAttribute("reservation", reservation);
+        
+        if (reservation.getVolProgrammation() != null) {
+            if (reservation.getVolProgrammation().getVol() != null) {
+                model.addAttribute("selectedVolId", reservation.getVolProgrammation().getVol().getId());
+            }
+            model.addAttribute("selectedVolProgrammationId", reservation.getVolProgrammation().getId());
+        }
+        
+        return "reservation/create";
+    }
 }
