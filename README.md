@@ -9,7 +9,7 @@ Ce projet est une application de gestion pour une compagnie aérienne, développ
 - **Spring Data JPA** : Pour la persistance des données.
 - **PostgreSQL** : Base de données relationnelle.
 - **JSP (JavaServer Pages)** : Pour l'interface utilisateur.
-- **Lombok** : Pour réduire le code boilerplate.
+- **Lombok** : Pour réduire le code boillate.
 - **Maven** : Gestionnaire de dépendances.
 
 ## 📁 Structure du Projet
