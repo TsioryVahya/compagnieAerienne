@@ -3,51 +3,21 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <jsp:include page="common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-gray-50">
-    <!-- Sidebar -->
-    <jsp:include page="common/sidebar.jsp" />
+<body class="min-h-screen bg-gradient-to-br from-black via-black-light to-black">
+    <!-- Navbar -->
+    <jsp:include page="common/navbar.jsp" />
 
-    <!-- Main Content Wrapper -->
-    <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300">
-        <!-- Top Navbar -->
-        <jsp:include page="common/navbar.jsp" />
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gold mb-2">Tableau de Bord</h1>
+            <p class="text-gray-400">Vue d'ensemble de votre compagnie aérienne</p>
+        </div>
 
-        <!-- Main Page Content -->
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-            <div class="container mx-auto max-w-7xl">
-                
-                <!-- Page Header with Breadcrumb -->
-                <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Tableau de Bord</h1>
-                        <!-- Breadcrumb -->
-                        <nav class="flex" aria-label="Breadcrumb">
-                            <ol class="inline-flex items-center space-x-1 md:space-x-2">
-                                <li class="inline-flex items-center">
-                                    <a href="/" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-brand-600">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-                                        Accueil
-                                    </a>
-                                </li>
-                                <li>
-                                    <div class="flex items-center">
-                                        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Tableau de bord</span>
-                                    </div>
-                                </li>
-                            </ol>
-                        </nav>
-                    </div>
-                    <button class="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 shadow-sm transition-colors text-sm font-medium flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Nouveau Rapport
-                    </button>
-                </div>
-
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- Stat Card 1 -->
                     <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                         <div class="flex items-center justify-between mb-4">
@@ -77,81 +47,106 @@
                         <div class="text-2xl font-bold text-gray-900">
                             <fmt:formatNumber value="${passagersMois}" type="number" />
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Actuels ce mois</p>
+<!-- Stat Card 1 -->
+                    <div class="bg-gradient-to-br from-black-light to-black-lighter rounded-xl p-6 shadow-lg border border-gold-900">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Vols Aujourd'hui</h3>
+                            <span class="p-3 bg-gold bg-opacity-20 text-gold rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-2">${volsAujourdhui}</div>
+                        <p class="text-sm text-gold">Programmés ce jour</p>
+                    </div>
+
+                    <!-- Stat Card 2 -->
+                    <div class="bg-gradient-to-br from-black-light to-black-lighter rounded-xl p-6 shadow-lg border border-gold-900">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Réservations</h3>
+                            <span class="p-3 bg-gold bg-opacity-20 text-gold rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z" />
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="text-3xl font-bold text-white mb-2">${reservationsMois}</div>
+                        <p class="text-sm text-gold">Ce mois-ci</p>
                     </div>
 
                      <!-- Stat Card 3 -->
-                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                    <div class="bg-gradient-to-br from-black-light to-black-lighter rounded-xl p-6 shadow-lg border border-gold-900">
                          <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-medium text-gray-500">Revenus</h3>
-                            <span class="p-2 bg-purple-50 text-purple-600 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Revenus</h3>
+                            <span class="p-3 bg-gold bg-opacity-20 text-gold rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </span>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900">
+                        <div class="text-3xl font-bold text-white mb-2">
                             <fmt:formatNumber value="${revenusMois}" type="currency" currencySymbol="$" />
                         </div>
-                        <p class="text-xs text-green-600 mt-1 font-bold">Ce mois-ci</p>
+                        <p class="text-sm text-gold">Ce mois-ci</p>
                     </div>
 
                     <!-- Stat Card 4 -->
-                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                    <div class="bg-gradient-to-br from-black-light to-black-lighter rounded-xl p-6 shadow-lg border border-gold-900">
                          <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-medium text-gray-500">Retards</h3>
-                            <span class="p-2 bg-red-50 text-red-600 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Retards</h3>
+                            <span class="p-3 bg-red-600 bg-opacity-20 text-red-400 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                                 </svg>
                             </span>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900">${retards}</div>
-                        <p class="text-xs text-red-600 mt-1">Attention requise</p>
+                        <div class="text-3xl font-bold text-white mb-2">${retards}</div>
+                        <p class="text-sm text-red-400">Attention requise</p>
                     </div>
                 </div>
 
                 <!-- Recent Flights Table -->
-                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-medium text-gray-900">Vols Récents</h3>
-                        <a href="${pageContext.request.contextPath}/vol-programmation" class="text-sm font-medium text-brand-600 hover:text-brand-700">Voir tout</a>
+                 <div class="bg-gradient-to-br from-black-light to-black-lighter rounded-xl shadow-lg border border-gold-900 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gold-900 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-gold">Vols Récents</h3>
+                        <a href="${pageContext.request.contextPath}/vol-programmation" class="text-sm font-semibold text-gold hover:text-gold-300 transition-colors">Voir tout →</a>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-left text-sm whitespace-nowrap">
-                            <thead class="bg-gray-50 text-gray-900 font-semibold">
+                        <table class="min-w-full text-left text-sm">
+                            <thead class="bg-black text-gold font-bold border-b border-gold-900">
                                 <tr>
-                                    <th class="px-6 py-3">Vol No.</th>
-                                    <th class="px-6 py-3">Destination</th>
-                                    <th class="px-6 py-3">Départ</th>
-                                    <th class="px-6 py-3">Statut</th>
-                                    <th class="px-6 py-3">Action</th>
+                                    <th class="px-6 py-4">Vol No.</th>
+                                    <th class="px-6 py-4">Destination</th>
+                                    <th class="px-6 py-4">Départ</th>
+                                    <th class="px-6 py-4">Statut</th>
+                                    <th class="px-6 py-4">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100 border-t border-gray-100">
+                            <tbody class="divide-y divide-gold-900">
                                 <c:forEach items="${volsRecents}" var="prog">
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-3 font-medium text-brand-600">VOL-${prog.vol.id}</td>
-                                        <td class="px-6 py-3">${prog.vol.aeroportArrivee.nom}</td>
-                                        <td class="px-6 py-3">
+                                    <tr class="hover:bg-black-lighter transition-colors">
+                                        <td class="px-6 py-4 font-bold text-gold">VOL-${prog.vol.id}</td>
+                                        <td class="px-6 py-4 text-gray-300">${prog.vol.aeroportArrivee.nom}</td>
+                                        <td class="px-6 py-4 text-gray-300">
                                             <c:out value="${prog.dateHeure.toString().substring(11, 16)}" />
                                         </td>
-                                        <td class="px-6 py-3">
+                                        <td class="px-6 py-4">
                                             <c:set var="statut" value="${statusMap[prog.id]}" />
-                                            <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold 
-                                                ${statut == 'A l\'heure' || statut == 'En cours' ? 'bg-green-50 text-green-600' : 
-                                                  statut == 'Retardé' ? 'bg-orange-50 text-orange-600' : 
-                                                  statut == 'Annulé' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'}">
-                                                <span class="h-1.5 w-1.5 rounded-full 
-                                                    ${statut == 'A l\'heure' || statut == 'En cours' ? 'bg-green-600' : 
-                                                      statut == 'Retardé' ? 'bg-orange-600' : 
-                                                      statut == 'Annulé' ? 'bg-red-600' : 'bg-gray-600'}"></span>
+                                            <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold border
+                                                ${statut == 'A l\'heure' || statut == 'En cours' ? 'bg-green-900 bg-opacity-20 text-green-400 border-green-700' : 
+                                                  statut == 'Retardé' ? 'bg-orange-900 bg-opacity-20 text-orange-400 border-orange-700' : 
+                                                  statut == 'Annulé' ? 'bg-red-900 bg-opacity-20 text-red-400 border-red-700' : 'bg-gray-800 text-gray-400 border-gray-700'}">
+                                                <span class="h-2 w-2 rounded-full 
+                                                    ${statut == 'A l\'heure' || statut == 'En cours' ? 'bg-green-400' : 
+                                                      statut == 'Retardé' ? 'bg-orange-400' : 
+                                                      statut == 'Annulé' ? 'bg-red-400' : 'bg-gray-400'}"></span>
                                                 ${statut}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-3 text-gray-500 hover:text-gray-700">
-                                            <a href="${pageContext.request.contextPath}/vol-programmation/details/${prog.id}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <td class="px-6 py-4">
+                                            <a href="${pageContext.request.contextPath}/vol-programmation/details/${prog.id}" class="text-gold hover:text-gold-300 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                                 </svg>
                                             </a>
@@ -163,8 +158,6 @@
                     </div>
                 </div>
 
-            </div>
         </main>
-    </div>
 </body>
 </html>

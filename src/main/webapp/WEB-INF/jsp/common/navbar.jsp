@@ -1,42 +1,154 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-20">
-    <!-- Breadcrumbs / Search -->
-    <div class="flex items-center gap-4 flex-1">
-        <!-- Mobile Menu Button -->
-        <button class="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-md">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-        </button>
-
-        <!-- EMIRATES Logo -->
-        <div class="hidden md:flex items-center gap-2 mr-4 text-brand-600 font-bold text-xl">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-            </svg>
-            <span>EMIRATES</span>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="relative w-full max-w-md hidden sm:block">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
-                </svg>
+<% String activePage = (String) request.getAttribute("activePage"); %>
+<!-- Navigation principale -->
+<nav class="bg-black border-b-2 border-gold sticky top-0 z-50 shadow-lg">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <!-- Logo et Navigation principale -->
+            <div class="flex">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center gap-2 font-bold text-xl text-gold hover:text-gold-300 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                        </svg>
+                        <span class="hidden sm:inline">AirLine</span>
+                    </a>
+                </div>
+                
+                <!-- Menu Desktop -->
+                <div class="hidden lg:ml-8 lg:flex lg:space-x-1">
+                    <a href="/" class="<%= "home".equals(activePage) ? "bg-black-lighter text-gold border-b-2 border-gold" : "text-gray-300 hover:bg-black-lighter hover:text-gold" %> px-3 py-2 text-sm font-semibold transition-all flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                        </svg>
+                        Accueil
+                    </a>
+                    
+                    <!-- Menu Vols -->
+                    <div class="relative group">
+                        <button class="<%= "vols".equals(activePage) || "programmation".equals(activePage) ? "bg-black-lighter text-gold" : "text-gray-300 hover:bg-black-lighter hover:text-gold" %> px-3 py-2 text-sm font-semibold transition-all flex items-center gap-1">
+                            Vols
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="absolute left-0 mt-0 w-56 rounded-md shadow-lg bg-black-light border border-gold-900 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                            <div class="py-1">
+                                <a href="/vols" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">📋 Liste des vols</a>
+                                <a href="/vol-programmation" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">📅 Programmations</a>
+                                <a href="/vol-programmation/rapport-ca-global" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">📊 Rapport CA</a>
+                                <a href="/reservations" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">🎫 Réservations</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Menu Publicité -->
+                    <div class="relative group">
+                        <button class="text-gray-300 hover:bg-black-lighter hover:text-gold px-3 py-2 text-sm font-semibold transition-all flex items-center gap-1">
+                            Publicité
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="absolute left-0 mt-0 w-56 rounded-md shadow-lg bg-black-light border border-gold-900 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                            <div class="py-1">
+                                <a href="/publicite/societes" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">🏢 Sociétés</a>
+                                <a href="/publicite/videos" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">🎬 Vidéos</a>
+                                <a href="/publicite/diffusions" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">📡 Diffusions</a>
+                                <a href="/publicite/tarifs" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">💰 Tarifs</a>
+                                <a href="/paiements-publicite" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">💳 Paiements</a>
+                                <a href="/publicite/rapports" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">📈 Rapports</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Menu Paramètres -->
+                    <div class="relative group">
+                        <button class="text-gray-300 hover:bg-black-lighter hover:text-gold px-3 py-2 text-sm font-semibold transition-all flex items-center gap-1">
+                            Paramètres
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="absolute left-0 mt-0 w-56 rounded-md shadow-lg bg-black-light border border-gold-900 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                            <div class="py-1">
+                                <a href="/aeroports" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">✈️ Aéroports</a>
+                                <a href="/avions" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">🛩️ Avions</a>
+                                <a href="/avions/classes-places" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">💺 Classes</a>
+                                <a href="/statuts-vol" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">📌 Statuts Vol</a>
+                                <a href="/type-passager" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">👥 Types Passager</a>
+                                <a href="/pilotes" class="block px-4 py-2 text-sm text-gray-300 hover:bg-black-lighter hover:text-gold transition-colors">👨‍✈️ Pilotes</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <input type="text" name="search" id="search" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 sm:text-sm" placeholder="Rechercher (Ctrl+K)">
+
+            <!-- Barre de recherche et actions -->
+            <div class="hidden md:flex items-center gap-4">
+                <div class="relative">
+                    <input type="text" placeholder="Rechercher..." class="bg-black-light text-gray-300 border border-gold-900 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:border-gold text-sm w-64">
+                    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                
+                <button class="relative p-2 text-gray-300 hover:text-gold transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-gold rounded-full"></span>
+                </button>
+                
+                <div class="h-8 w-px bg-gold-900"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden xl:block">
+                        <div class="text-sm font-semibold text-gold">Admin</div>
+                        <div class="text-xs text-gray-400">Administrateur</div>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-gold to-gold-700 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                        A
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bouton menu mobile -->
+            <div class="flex items-center lg:hidden">
+                <button onclick="toggleMobileMenu()" class="text-gray-300 hover:text-gold p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Right Actions -->
-    <div class="flex items-center gap-4">
-        <button class="p-2 text-gray-400 hover:text-gray-500 relative">
-            <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-white"></span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-            </svg>
-        </button>
-        <div class="h-8 w-px bg-gray-200"></div>
-        <button class="text-sm font-medium text-gray-600 hover:text-gray-900">Aide</button>
+    <!-- Menu Mobile -->
+    <div id="mobileMenu" class="hidden lg:hidden bg-black-light border-t border-gold-900">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+            <a href="/" class="block px-3 py-2 rounded-md text-base font-semibold text-gray-300 hover:text-gold hover:bg-black-lighter">🏠 Accueil</a>
+            
+            <div class="px-3 py-2 text-xs font-semibold text-gold uppercase tracking-wider">Vols</div>
+            <a href="/vols" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">📋 Liste des vols</a>
+            <a href="/vol-programmation" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">📅 Programmations</a>
+            <a href="/vol-programmation/rapport-ca-global" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">📊 Rapport CA</a>
+            <a href="/reservations" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">🎫 Réservations</a>
+            
+            <div class="px-3 py-2 text-xs font-semibold text-gold uppercase tracking-wider mt-2">Publicité</div>
+            <a href="/publicite/societes" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">🏢 Sociétés</a>
+            <a href="/publicite/videos" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">🎬 Vidéos</a>
+            <a href="/publicite/diffusions" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">📡 Diffusions</a>
+            <a href="/publicite/tarifs" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">💰 Tarifs</a>
+            <a href="/paiements-publicite" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">💳 Paiements</a>
+            <a href="/publicite/rapports" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">📈 Rapports</a>
+            
+            <div class="px-3 py-2 text-xs font-semibold text-gold uppercase tracking-wider mt-2">Paramètres</div>
+            <a href="/aeroports" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">✈️ Aéroports</a>
+            <a href="/avions" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">🛩️ Avions</a>
+            <a href="/avions/classes-places" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">💺 Classes</a>
+            <a href="/statuts-vol" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">📌 Statuts Vol</a>
+            <a href="/type-passager" class="block px-6 py-2 rounded-md text-sm text-gray-300 hover:text-gold hover:bg-black-lighter">👥 Types Passager</a>
+        </div>
     </div>
-</header>
+</nav>
+
+<script>
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobileMenu');
+        menu.classList.toggle('hidden');
+    }
+</script>
