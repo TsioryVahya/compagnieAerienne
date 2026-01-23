@@ -56,6 +56,9 @@ public class VolProgrammationController {
     @Autowired
     private com.companieaerienne.services.RemiseTarifService remiseTarifService;
 
+    @Autowired
+    private com.companieaerienne.services.PubliciteService publiciteService;
+
     @GetMapping
     public String list(@RequestParam(required = false) String depart,
                       @RequestParam(required = false) String arrivee,
@@ -102,24 +105,58 @@ public class VolProgrammationController {
         
         Map<Integer, BigDecimal> ticketRevenues = new HashMap<>();
         Map<Integer, BigDecimal> pubRevenues = new HashMap<>();
+        Map<Integer, BigDecimal> pubPaid = new HashMap<>();
+        Map<Integer, BigDecimal> pubRemaining = new HashMap<>();
         Map<Integer, BigDecimal> totalRevenues = new HashMap<>();
 
         for (VolProgrammation p : programmations) {
             BigDecimal ticketRev = volProgrammationService.calculateRevenue(p);
             BigDecimal pubRev = volProgrammationService.calculatePubliciteRevenue(p);
+            BigDecimal paid = volProgrammationService.calculatePublicitePaid(p);
+            BigDecimal remaining = volProgrammationService.calculatePubliciteRemaining(p);
             
             ticketRevenues.put(p.getId(), ticketRev);
             pubRevenues.put(p.getId(), pubRev);
+            pubPaid.put(p.getId(), paid);
+            pubRemaining.put(p.getId(), remaining);
             totalRevenues.put(p.getId(), ticketRev.add(pubRev));
         }
         
         model.addAttribute("programmations", programmations);
         model.addAttribute("ticketRevenues", ticketRevenues);
         model.addAttribute("pubRevenues", pubRevenues);
+        model.addAttribute("pubPaid", pubPaid);
+        model.addAttribute("pubRemaining", pubRemaining);
         model.addAttribute("totalRevenues", totalRevenues);
         model.addAttribute("activePage", "rapport-ca-global");
         
         return "vol-programmation/rapport-ca-global";
+    }
+
+    @GetMapping("/revenus-details/{id}")
+    public String revenusDetails(@PathVariable Integer id, Model model) {
+        VolProgrammation p = volProgrammationService.findById(id).orElseThrow();
+        List<com.companieaerienne.entities.DiffusionProgrammation> pubs = publiciteService.findByVolProgrammationId(id);
+        
+        Map<Integer, BigDecimal> pubTotals = new HashMap<>();
+        Map<Integer, BigDecimal> pubPaids = new HashMap<>();
+        Map<Integer, BigDecimal> pubRemainings = new HashMap<>();
+        
+        for (com.companieaerienne.entities.DiffusionProgrammation pub : pubs) {
+            pubTotals.put(pub.getId(), publiciteService.getMontantForProgrammationPublic(pub));
+            pubPaids.put(pub.getId(), publiciteService.getDejaPaye(pub));
+            pubRemainings.put(pub.getId(), publiciteService.getResteAPayer(pub));
+        }
+        
+        model.addAttribute("programmation", p);
+        model.addAttribute("pubs", pubs);
+        model.addAttribute("pubTotals", pubTotals);
+        model.addAttribute("pubPaids", pubPaids);
+        model.addAttribute("pubRemainings", pubRemainings);
+        model.addAttribute("ticketRevenue", volProgrammationService.calculateRevenue(p));
+        model.addAttribute("activePage", "rapport-ca-global");
+        
+        return "vol-programmation/revenus-details";
     }
 
     @GetMapping("/details/{id}")

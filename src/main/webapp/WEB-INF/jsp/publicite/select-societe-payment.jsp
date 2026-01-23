@@ -9,7 +9,7 @@
         <jsp:include page="../common/navbar.jsp" />
 
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-            <div class="container mx-auto max-w-4xl">
+            <div class="container mx-auto max-w-7xl">
                 
                 <div class="mb-8">
                     <h1 class="text-2xl font-bold text-gray-900 mb-2">Paiement par Société</h1>

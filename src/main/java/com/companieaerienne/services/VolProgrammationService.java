@@ -123,6 +123,26 @@ public class VolProgrammationService {
         return total;
     }
 
+    public BigDecimal calculatePublicitePaid(VolProgrammation programmation) {
+        List<com.companieaerienne.entities.DiffusionProgrammation> pubs = publiciteService.findByVolProgrammationId(programmation.getId());
+        BigDecimal total = BigDecimal.ZERO;
+        
+        for (com.companieaerienne.entities.DiffusionProgrammation pub : pubs) {
+            total = total.add(publiciteService.getDejaPaye(pub));
+        }
+        return total;
+    }
+
+    public BigDecimal calculatePubliciteRemaining(VolProgrammation programmation) {
+        List<com.companieaerienne.entities.DiffusionProgrammation> pubs = publiciteService.findByVolProgrammationId(programmation.getId());
+        BigDecimal total = BigDecimal.ZERO;
+        
+        for (com.companieaerienne.entities.DiffusionProgrammation pub : pubs) {
+            total = total.add(publiciteService.getResteAPayer(pub));
+        }
+        return total;
+    }
+
     private BigDecimal calculateMontantForPub(com.companieaerienne.entities.DiffusionProgrammation pub) {
         // Logique similaire à celle de PubliciteService.getMontantForProgrammation
         // On pourrait injecter PubliciteService mais pour éviter la circularité si PubliciteService utilise VolProgrammationService

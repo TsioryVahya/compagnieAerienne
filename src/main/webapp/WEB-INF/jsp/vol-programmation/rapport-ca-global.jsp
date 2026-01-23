@@ -46,7 +46,10 @@
                                     <th class="px-6 py-3">Heure Départ</th>
                                     <th class="px-6 py-3 text-right">CA Tickets</th>
                                     <th class="px-6 py-3 text-right">CA Publicités</th>
+                                    <th class="px-6 py-3 text-right">Déjà Payé (Pub)</th>
+                                    <th class="px-6 py-3 text-right">Reste à Payer (Pub)</th>
                                     <th class="px-6 py-3 text-right font-bold text-brand-600">CA Total</th>
+                                    <th class="px-6 py-3 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 border-t border-gray-100">
@@ -68,8 +71,20 @@
                                         <td class="px-6 py-3 text-right font-medium text-gray-900">
                                             <fmt:formatNumber value="${pubRevenues[p.id]}" type="currency" currencySymbol="Ar" />
                                         </td>
+                                        <td class="px-6 py-3 text-right font-medium text-green-600">
+                                            <fmt:formatNumber value="${pubPaid[p.id]}" type="currency" currencySymbol="Ar" />
+                                        </td>
+                                        <td class="px-6 py-3 text-right font-medium text-red-600">
+                                            <fmt:formatNumber value="${pubRemaining[p.id]}" type="currency" currencySymbol="Ar" />
+                                        </td>
                                         <td class="px-6 py-3 text-right font-bold text-brand-600">
                                             <fmt:formatNumber value="${totalRevenues[p.id]}" type="currency" currencySymbol="Ar" />
+                                        </td>
+                                        <td class="px-6 py-3 text-center">
+                                            <a href="${pageContext.request.contextPath}/vol-programmation/revenus-details/${p.id}" 
+                                               class="inline-flex items-center px-3 py-1 bg-brand-50 text-brand-600 hover:bg-brand-100 rounded-md transition-colors text-xs font-semibold">
+                                                Détails
+                                            </a>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -90,6 +105,20 @@
                                             <c:set var="sumPubs" value="${sumPubs + val}" />
                                         </c:forEach>
                                         <fmt:formatNumber value="${sumPubs}" type="currency" currencySymbol="Ar" />
+                                    </td>
+                                    <td class="px-6 py-4 text-right text-green-600">
+                                        <c:set var="sumPaid" value="0" />
+                                        <c:forEach items="${pubPaid.values()}" var="val">
+                                            <c:set var="sumPaid" value="${sumPaid + val}" />
+                                        </c:forEach>
+                                        <fmt:formatNumber value="${sumPaid}" type="currency" currencySymbol="Ar" />
+                                    </td>
+                                    <td class="px-6 py-4 text-right text-red-600">
+                                        <c:set var="sumRemaining" value="0" />
+                                        <c:forEach items="${pubRemaining.values()}" var="val">
+                                            <c:set var="sumRemaining" value="${sumRemaining + val}" />
+                                        </c:forEach>
+                                        <fmt:formatNumber value="${sumRemaining}" type="currency" currencySymbol="Ar" />
                                     </td>
                                     <td class="px-6 py-4 text-right text-brand-700">
                                         <fmt:formatNumber value="${sumTickets + sumPubs}" type="currency" currencySymbol="Ar" />
