@@ -96,6 +96,32 @@ public class VolProgrammationController {
         return "vol-programmation/list";
     }
 
+    @GetMapping("/rapport-ca-global")
+    public String rapportCAGlobal(Model model) {
+        List<VolProgrammation> programmations = volProgrammationService.findAll();
+        
+        Map<Integer, BigDecimal> ticketRevenues = new HashMap<>();
+        Map<Integer, BigDecimal> pubRevenues = new HashMap<>();
+        Map<Integer, BigDecimal> totalRevenues = new HashMap<>();
+
+        for (VolProgrammation p : programmations) {
+            BigDecimal ticketRev = volProgrammationService.calculateRevenue(p);
+            BigDecimal pubRev = volProgrammationService.calculatePubliciteRevenue(p);
+            
+            ticketRevenues.put(p.getId(), ticketRev);
+            pubRevenues.put(p.getId(), pubRev);
+            totalRevenues.put(p.getId(), ticketRev.add(pubRev));
+        }
+        
+        model.addAttribute("programmations", programmations);
+        model.addAttribute("ticketRevenues", ticketRevenues);
+        model.addAttribute("pubRevenues", pubRevenues);
+        model.addAttribute("totalRevenues", totalRevenues);
+        model.addAttribute("activePage", "rapport-ca-global");
+        
+        return "vol-programmation/rapport-ca-global";
+    }
+
     @GetMapping("/details/{id}")
     public String details(@PathVariable Integer id, Model model) {
         VolProgrammation programmation = volProgrammationService.findById(id).orElseThrow();

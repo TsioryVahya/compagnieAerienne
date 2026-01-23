@@ -52,6 +52,8 @@
                                     <th class="px-6 py-3">Diffusion (Pub)</th>
                                     <th class="px-6 py-3">Société</th>
                                     <th class="px-6 py-3 text-center">Nb Diffusions</th>
+                                    <th class="px-6 py-3 text-right">Déjà Payé</th>
+                                    <th class="px-6 py-3 text-right">Reste à Payer</th>
                                     <th class="px-6 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -69,6 +71,12 @@
                                         <td class="px-6 py-3 font-medium text-gray-900">${p.diffusion.nom}</td>
                                         <td class="px-6 py-3 text-gray-600">${p.diffusion.societe.nom}</td>
                                         <td class="px-6 py-3 text-center font-medium text-gray-900">${p.nombreDiffusions}</td>
+                                        <td class="px-6 py-3 text-right font-medium text-blue-600">
+                                            <fmt:formatNumber value="${dejasPayes[p.id]}" type="currency" currencySymbol="Ar" maxFractionDigits="0" />
+                                        </td>
+                                        <td class="px-6 py-3 text-right font-medium ${restesAPayer[p.id] > 0 ? 'text-red-600' : 'text-green-600'}">
+                                            <fmt:formatNumber value="${restesAPayer[p.id]}" type="currency" currencySymbol="Ar" maxFractionDigits="0" />
+                                        </td>
                                         <td class="px-6 py-3 flex justify-end gap-3">
                                             <a href="/publicites/payer/${p.id}" class="text-green-600 hover:text-green-800">Payer</a>
                                             <a href="/publicites/edit/${p.id}" class="text-brand-600 hover:text-brand-800">Modifier</a>

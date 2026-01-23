@@ -13,4 +13,9 @@ public interface DiffusionProgrammationRepository extends JpaRepository<Diffusio
     
     @Query("SELECT dp FROM DiffusionProgrammation dp WHERE dp.dateProgrammation BETWEEN :start AND :end")
     List<DiffusionProgrammation> findByPeriod(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Query("SELECT dp FROM DiffusionProgrammation dp WHERE dp.volProgrammation.id = :volProgrammationId")
+    List<DiffusionProgrammation> findByVolProgrammationId(@Param("volProgrammationId") Integer volProgrammationId);
+
+    List<DiffusionProgrammation> findByDiffusionSocieteId(Integer societeId);
 }

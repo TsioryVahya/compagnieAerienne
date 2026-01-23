@@ -20,6 +20,9 @@ public class VolProgrammationService {
     @Autowired
     private ClassePlaceService classePlaceService;
 
+    @Autowired
+    private PubliciteService publiciteService;
+
     public List<VolProgrammation> findAll() {
         return repository.findAll();
     }
@@ -108,5 +111,30 @@ public class VolProgrammationService {
             total = total.add(tarifUnitaire.multiply(new BigDecimal(nbPlaces)));
         }
         return total;
+    }
+
+    public BigDecimal calculatePubliciteRevenue(VolProgrammation programmation) {
+        List<com.companieaerienne.entities.DiffusionProgrammation> pubs = publiciteService.findByVolProgrammationId(programmation.getId());
+        BigDecimal total = BigDecimal.ZERO;
+        
+        for (com.companieaerienne.entities.DiffusionProgrammation pub : pubs) {
+            total = total.add(calculateMontantForPub(pub));
+        }
+        return total;
+    }
+
+    private BigDecimal calculateMontantForPub(com.companieaerienne.entities.DiffusionProgrammation pub) {
+        // Logique similaire à celle de PubliciteService.getMontantForProgrammation
+        // On pourrait injecter PubliciteService mais pour éviter la circularité si PubliciteService utilise VolProgrammationService
+        // On va plutôt déléguer ou réimplémenter ici si nécessaire.
+        // Ici PubliciteService est déjà injecté.
+        
+        // Comme nous avons besoin d'un accès direct au tarif, voyons si on peut utiliser une méthode publique de PubliciteService
+        // Malheureusement getMontantForProgrammation est privé dans PubliciteService.
+        // Rendons-le public ou utilisons la même logique.
+        
+        // Pour l'instant, réutilisons la logique simple car nous avons accès au repo via PubliciteService si on change sa visibilité.
+        // Ou plus simple: ajouter une méthode dans PubliciteService pour calculer le montant d'une programmation spécifique.
+        return publiciteService.getMontantForProgrammationPublic(pub);
     }
 }

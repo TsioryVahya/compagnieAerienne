@@ -1,10 +1,12 @@
 package com.companieaerienne.controllers;
 
 import com.companieaerienne.entities.DiffusionProgrammation;
+import com.companieaerienne.entities.Societe;
 import com.companieaerienne.entities.VolProgrammation;
 import com.companieaerienne.services.DiffusionService;
 import com.companieaerienne.services.PaymentPubliciteService;
 import com.companieaerienne.services.PubliciteService;
+import com.companieaerienne.services.SocieteService;
 import com.companieaerienne.services.VolProgrammationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/publicites")
@@ -31,12 +35,31 @@ public class PubliciteController {
     private VolProgrammationService volProgrammationService;
 
     @Autowired
+    private SocieteService societeService;
+
+    @Autowired
     private PaymentPubliciteService paymentService;
 
     @GetMapping
     public String findAll(Model model) {
         model.addAttribute("activePage", "publicites");
-        model.addAttribute("programmations", publiciteService.findAll());
+        List<DiffusionProgrammation> programmations = publiciteService.findAll();
+        model.addAttribute("programmations", programmations);
+        
+        // Calculer les montants payés et restes à payer
+        Map<Integer, BigDecimal> dejasPayes = programmations.stream()
+                .collect(Collectors.toMap(
+                        DiffusionProgrammation::getId,
+                        p -> publiciteService.getDejaPaye(p)
+                ));
+        Map<Integer, BigDecimal> restesAPayer = programmations.stream()
+                .collect(Collectors.toMap(
+                        DiffusionProgrammation::getId,
+                        p -> publiciteService.getResteAPayer(p)
+                ));
+        model.addAttribute("dejasPayes", dejasPayes);
+        model.addAttribute("restesAPayer", restesAPayer);
+        
         return "diffusion-pub/list";
     }
 
@@ -101,6 +124,41 @@ public class PubliciteController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime datePayment) {
         paymentService.savePayment(programmationId, montant, datePayment);
         return "redirect:/publicites";
+    }
+
+    @GetMapping("/payer-societe")
+    public String selectSocieteForPayment(Model model) {
+        model.addAttribute("activePage", "publicites-payer-societe");
+        model.addAttribute("societes", societeService.findAll());
+        return "publicite/select-societe-payment";
+    }
+
+    @GetMapping("/payer-societe/{societeId}")
+    public String paymentSocieteForm(@PathVariable Integer societeId, Model model) {
+        Societe societe = societeService.findById(societeId).orElseThrow();
+        
+        Map<String, BigDecimal> caBySociete = publiciteService.getCABySociete(null, null);
+        Map<String, BigDecimal> paidBySociete = publiciteService.getPaidBySociete(null, null);
+        
+        BigDecimal totalDu = caBySociete.getOrDefault(societe.getNom(), BigDecimal.ZERO);
+        BigDecimal totalPaye = paidBySociete.getOrDefault(societe.getNom(), BigDecimal.ZERO);
+        
+        model.addAttribute("activePage", "publicites-payer-societe");
+        model.addAttribute("societe", societe);
+        model.addAttribute("totalDu", totalDu);
+        model.addAttribute("totalPaye", totalPaye);
+        model.addAttribute("resteAPayer", totalDu.subtract(totalPaye));
+        
+        return "publicite/payment-societe";
+    }
+
+    @PostMapping("/payer-societe/save")
+    public String savePaymentSociete(
+            @RequestParam Integer societeId,
+            @RequestParam BigDecimal montant,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime datePayment) {
+        paymentService.savePaymentForSociete(societeId, montant, datePayment);
+        return "redirect:/publicites/rapport-ca";
     }
 
     @GetMapping("/rapport-ca")

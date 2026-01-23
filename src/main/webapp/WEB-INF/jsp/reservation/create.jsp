@@ -236,43 +236,72 @@
             generateManualGrid();
         });
 
-        function generateManualGrid() {
+        let currentTarifs = [];
+
+        async function generateManualGrid() {
             if (avionClasses.length === 0) {
-                manualGridContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Veuillez d\'abord sélectionner un vol et une date.</p>';
+                const volId = volSelect.value;
+                const vpId = volProgrammationSelect.value;
+                if (volId && vpId) {
+                    manualGridContainer.innerHTML = '<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-center">' +
+                        '<p class="font-bold">Attention</p>' +
+                        '<p class="text-sm">Aucune configuration de classes n\'a été trouvée pour l\'avion de ce vol. Veuillez configurer les places par classe pour cet avion.</p>' +
+                        '</div>';
+                } else {
+                    manualGridContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Veuillez d\'abord sélectionner un vol et une date.</p>';
+                }
                 return;
             }
 
-            // Récupérer les classes uniques
-            const classes = [];
+            const vpId = volProgrammationSelect.value;
+            try {
+                const response = await fetch('/api/vol/programmation/' + vpId + '/tarifs');
+                currentTarifs = await response.json();
+            } catch (error) {
+                console.error('Erreur lors du chargement des tarifs:', error);
+                currentTarifs = [];
+            }
+
+            const classesMap = new Map();
             avionClasses.forEach(ac => {
-                const classObj = ac.classe || { id: ac.id_classe, nom: 'Classe ' + ac.id_classe };
-                if (!classes.find(c => c.id === classObj.id)) {
-                    classes.push(classObj);
+                const c = ac.classe || { id: ac.id_classe, nom: 'Classe ' + ac.id_classe };
+                if (c.id && !classesMap.has(c.id)) {
+                    classesMap.set(c.id, c);
                 }
             });
-
-            let html = '<table class="min-w-full divide-y divide-gray-200 border">';
-            html += '<thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">Type Passager</th>';
+            const classes = Array.from(classesMap.values());
+            
+            let html = '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">';
+            html += '<thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type \\ Classe</th>';
+            
             classes.forEach(c => {
-                const availableCount = countAvailableSeatsForClass(c.id);
-                html += '<th class="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase">' + 
-                        c.nom + '<br><span class="text-[10px] font-normal text-brand-600">(' + availableCount + ' dispo)</span></th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">' + c.nom + '</th>';
             });
             html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
 
             typePassagers.forEach(tp => {
-                html += '<tr><td class="px-4 py-2 text-sm font-medium text-gray-900">' + tp.nom + '</td>';
+                html += '<tr><td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">' + tp.nom + '</td>';
                 classes.forEach(c => {
-                    html += '<td class="px-4 py-2 text-center">' +
-                                '<input type="number" min="0" value="0" ' +
-                                    'class="manual-count-input w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm" ' +
-                                    'data-type-id="' + tp.id + '" data-classe-id="' + c.id + '" ' +
-                                    'onchange="updateTotalManualCount()">' +
-                             '</td>';
+                    const available = countAvailableSeatsForClass(c.id);
+                    const tarif = currentTarifs.find(t => t.classeId == c.id && t.typePassagerId == tp.id);
+                    const tarifDisplay = tarif ? new Intl.NumberFormat('fr-FR').format(tarif.tarif) + ' Ar' : '<span class="text-red-500 text-xs italic">Non défini</span>';
+                    
+                    html += '<td class="px-4 py-2 whitespace-nowrap">' +
+                        '<div class="flex flex-col space-y-1">' +
+                            '<span class="text-[10px] text-gray-500">' + tarifDisplay + '</span>' +
+                            '<input type="number" min="0" max="' + available + '" value="0" ' +
+                                'class="manual-count-input block w-20 px-2 py-1 text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" ' +
+                                'data-type-id="' + tp.id + '" data-classe-id="' + c.id + '" ' +
+                                'onchange="updateTotalManualCount()" ' +
+                                (tarif ? '' : 'disabled') + '>' +
+                            '<span class="text-[10px] text-gray-400">Disp: ' + available + '</span>' +
+                        '</div>' +
+                    '</td>';
                 });
                 html += '</tr>';
             });
-            html += '</tbody></table>';
+
+            html += '</tbody></table></div>';
             manualGridContainer.innerHTML = html;
         }
 
