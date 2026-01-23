@@ -181,7 +181,7 @@
                                                                value="${requestScope[tarifKey]}"
                                                                class="tarif-input w-full pl-8 pr-4 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-transparent text-sm" 
                                                                placeholder="Tarif pour ${type.nom}" 
-                                                               required>
+                                                               >
                                                     </div>
                                                 </div>
                                             </c:forEach>

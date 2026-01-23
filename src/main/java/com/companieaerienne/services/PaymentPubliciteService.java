@@ -7,11 +7,14 @@ import com.companieaerienne.repositories.DiffusionProgrammationRepository;
 import com.companieaerienne.repositories.PaymentDetailsDiffusionRepository;
 import com.companieaerienne.repositories.PaymentDiffusionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class PaymentPubliciteService {
@@ -24,6 +27,10 @@ public class PaymentPubliciteService {
 
     @Autowired
     private DiffusionProgrammationRepository programmationRepository;
+
+    @Autowired
+    @Lazy
+    private PubliciteService publiciteService;
 
     public BigDecimal getTotalPaidForProgrammation(Integer programmationId) {
         return paymentRepository.findByDiffusionProgrammationId(programmationId)
@@ -51,5 +58,30 @@ public class PaymentPubliciteService {
         details.setMontant(montant);
         details.setDatePayment(date != null ? date : LocalDateTime.now());
         detailsRepository.save(details);
+    }
+
+    @Transactional
+    public void savePaymentForSociete(Integer societeId, BigDecimal montantTotal, LocalDateTime date) {
+        List<DiffusionProgrammation> programmations = programmationRepository.findByDiffusionSocieteId(societeId);
+        if (programmations.isEmpty()) return;
+
+        BigDecimal totalDu = programmations.stream()
+                .map(dp -> publiciteService.getMontantForProgrammationPublic(dp))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalDu.compareTo(BigDecimal.ZERO) == 0) return;
+
+        // Calculer le ratio de paiement (ex: 500k / 1M = 0.5)
+        BigDecimal ratio = montantTotal.divide(totalDu, 10, RoundingMode.HALF_UP);
+
+        for (DiffusionProgrammation dp : programmations) {
+            BigDecimal montantDiffusion = publiciteService.getMontantForProgrammationPublic(dp);
+            // Appliquer le même ratio à chaque diffusion
+            BigDecimal montantAPayer = montantDiffusion.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+            
+            if (montantAPayer.compareTo(BigDecimal.ZERO) > 0) {
+                savePayment(dp.getId(), montantAPayer, date);
+            }
+        }
     }
 }

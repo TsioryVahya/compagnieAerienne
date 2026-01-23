@@ -42,6 +42,10 @@ public class PubliciteService {
         programmationRepository.deleteById(id);
     }
 
+    public List<DiffusionProgrammation> findByVolProgrammationId(Integer volProgrammationId) {
+        return programmationRepository.findByVolProgrammationId(volProgrammationId);
+    }
+
     public List<DiffusionProgrammation> getProgrammations(Integer year, Integer month) {
         if (year == null && month == null) {
             return programmationRepository.findAll();
@@ -66,6 +70,20 @@ public class PubliciteService {
         }
         
         return programmationRepository.findByPeriod(start, end);
+    }
+
+    public BigDecimal getMontantForProgrammationPublic(DiffusionProgrammation dp) {
+        return getMontantForProgrammation(dp);
+    }
+
+    public BigDecimal getResteAPayer(DiffusionProgrammation dp) {
+        BigDecimal totalDu = getMontantForProgrammation(dp);
+        BigDecimal totalPaye = getDejaPaye(dp);
+        return totalDu.subtract(totalPaye);
+    }
+
+    public BigDecimal getDejaPaye(DiffusionProgrammation dp) {
+        return paymentService.getTotalPaidForProgrammation(dp.getId());
     }
 
     private BigDecimal getMontantForProgrammation(DiffusionProgrammation dp) {
