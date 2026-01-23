@@ -2,44 +2,28 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="../common/header.jsp" />
 
-<body class="h-screen flex overflow-hidden bg-gray-50">
-    <jsp:include page="../common/sidebar.jsp" />
+<body class="min-h-screen bg-gradient-to-br from-black via-black-light to-black">
+    <!-- Navbar -->
+    <jsp:include page="../common/navbar.jsp" />
 
-    <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300">
-        <jsp:include page="../common/navbar.jsp" />
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Page Header -->
+        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gold mb-2">Gestion de la Flotte</h1>
+                <p class="text-gray-400">Liste complète des avions de la compagnie</p>
+            </div>
+            <a href="/avions/create" class="bg-gradient-to-r from-gold to-gold-700 text-black px-6 py-3 rounded-lg hover:from-gold-600 hover:to-gold-800 shadow-lg transition-all text-sm font-bold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Nouvel Avion
+            </a>
+        </div>
 
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-            <div class="container mx-auto max-w-7xl">
-                
-                <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Avions</h1>
-                        <nav class="flex" aria-label="Breadcrumb">
-                            <ol class="inline-flex items-center space-x-1 md:space-x-2">
-                                <li class="inline-flex items-center">
-                                    <a href="/" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-brand-600">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-                                        Accueil
-                                    </a>
-                                </li>
-                                <li>
-                                    <div class="flex items-center">
-                                        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Avions</span>
-                                    </div>
-                                </li>
-                            </ol>
-                        </nav>
-                    </div>
-                    <a href="/avions/create" class="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 shadow-sm transition-colors text-sm font-medium flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Nouvel Avion
-                    </a>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-br from-black-light to-black-lighter rounded-xl shadow-lg border border-gold-900 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                         <h3 class="text-lg font-medium text-gray-900">Liste des Avions</h3>
                         <div class="flex items-center gap-2">
