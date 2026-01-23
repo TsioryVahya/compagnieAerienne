@@ -46,7 +46,6 @@ public class PubliciteController {
         List<DiffusionProgrammation> programmations = publiciteService.findAll();
         model.addAttribute("programmations", programmations);
         
-        // Calculer les montants payés et restes à payer
         Map<Integer, BigDecimal> dejasPayes = programmations.stream()
                 .collect(Collectors.toMap(
                         DiffusionProgrammation::getId,
@@ -108,6 +107,47 @@ public class PubliciteController {
         return "redirect:/publicites";
     }
 
+    @GetMapping("/factures")
+    public String selectSocieteForInvoices(Model model) {
+        model.addAttribute("activePage", "factures-societe");
+        model.addAttribute("societes", societeService.findAll());
+        return "publicite/select-societe-invoices";
+    }
+
+    @GetMapping("/factures/{societeId}")
+    public String viewInvoicesBySociete(@PathVariable Integer societeId, Model model) {
+        model.addAttribute("activePage", "factures-societe");
+        
+        com.companieaerienne.entities.Societe societe = societeService.findById(societeId)
+                .orElseThrow(() -> new IllegalArgumentException("Société non trouvée"));
+        model.addAttribute("societe", societe);
+        
+        List<DiffusionProgrammation> programmations = publiciteService.findBySocieteId(societeId);
+        model.addAttribute("programmations", programmations);
+        
+        Map<Integer, BigDecimal> dejasPayes = programmations.stream()
+                .collect(Collectors.toMap(
+                        DiffusionProgrammation::getId,
+                        p -> publiciteService.getDejaPaye(p)
+                ));
+        Map<Integer, BigDecimal> restesAPayer = programmations.stream()
+                .collect(Collectors.toMap(
+                        DiffusionProgrammation::getId,
+                        p -> publiciteService.getResteAPayer(p)
+                ));
+        Map<Integer, BigDecimal> montantsTotaux = programmations.stream()
+                .collect(Collectors.toMap(
+                        DiffusionProgrammation::getId,
+                        p -> publiciteService.getMontantForProgrammationPublic(p)
+                ));
+                
+        model.addAttribute("dejasPayes", dejasPayes);
+        model.addAttribute("restesAPayer", restesAPayer);
+        model.addAttribute("montantsTotaux", montantsTotaux);
+        
+        return "publicite/factures-societe";
+    }
+
     @GetMapping("/payer/{id}")
     public String paymentForm(@PathVariable Integer id, Model model) {
         DiffusionProgrammation dp = publiciteService.findById(id).orElseThrow();
@@ -128,7 +168,7 @@ public class PubliciteController {
 
     @GetMapping("/payer-societe")
     public String selectSocieteForPayment(Model model) {
-        model.addAttribute("activePage", "publicites-payer-societe");
+        model.addAttribute("activePage", "payer-societe");
         model.addAttribute("societes", societeService.findAll());
         return "publicite/select-societe-payment";
     }
@@ -143,7 +183,7 @@ public class PubliciteController {
         BigDecimal totalDu = caBySociete.getOrDefault(societe.getNom(), BigDecimal.ZERO);
         BigDecimal totalPaye = paidBySociete.getOrDefault(societe.getNom(), BigDecimal.ZERO);
         
-        model.addAttribute("activePage", "publicites-payer-societe");
+        model.addAttribute("activePage", "payer-societe");
         model.addAttribute("societe", societe);
         model.addAttribute("totalDu", totalDu);
         model.addAttribute("totalPaye", totalPaye);
@@ -158,7 +198,7 @@ public class PubliciteController {
             @RequestParam BigDecimal montant,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime datePayment) {
         paymentService.savePaymentForSociete(societeId, montant, datePayment);
-        return "redirect:/publicites/rapport-ca";
+        return "redirect:/publicites/factures/" + societeId;
     }
 
     @GetMapping("/rapport-ca")

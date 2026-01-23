@@ -86,6 +86,12 @@ public class PubliciteService {
         return paymentService.getTotalPaidForProgrammation(dp.getId());
     }
 
+    public List<DiffusionProgrammation> findBySocieteId(Integer societeId) {
+        return programmationRepository.findAll().stream()
+                .filter(p -> p.getDiffusion().getSociete().getId().equals(societeId))
+                .collect(Collectors.toList());
+    }
+
     private BigDecimal getMontantForProgrammation(DiffusionProgrammation dp) {
         return tarifRepository.findLatestTarifForDate(dp.getDateProgrammation())
                 .map(TarifPub::getMontant)

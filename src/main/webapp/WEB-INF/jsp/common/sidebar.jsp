@@ -61,6 +61,32 @@
             Réservations
         </a>
 
+        <!-- Section: Publicité -->
+        <div class="px-3 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Publicité
+        </div>
+
+        <a href="/publicites" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md group transition-all duration-200 <%= "publicites".equals(activePage) ? "bg-white text-brand-600 shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" %>">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-colors <%= "publicites".equals(activePage) ? "text-brand-500" : "text-gray-400 group-hover:text-gray-500" %>">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a13.247 13.247 0 01-1.022-2.89m2.684-1.331l-.442 1.453m2.242-1.453a18.112 18.112 0 01.303-3.57m.495 2.14a8.055 8.055 0 011.012 3.65m0 0a3.03 3.03 0 01-.504 1.353 3 3 0 01-2.52 1.252m5.01-6.12c.163-.332.317-.67.46-1.012m.133 1.012a10.97 10.97 0 001.63-5.062c0-.181-.044-.356-.13-.523a3 3 0 00-5.37 0 10.97 10.97 0 00-1.63 5.062V11m3.36 3.012l-.442-1.453m4.56-3.773c.162.332.317.67.46 1.012m-3.967-3.146a18.117 18.117 0 01.303 3.57m-.495-2.14a8.055 8.055 0 011.012-3.65m0 0a3.03 3.03 0 01.504-1.353 3 3 0 012.52-1.252" />
+            </svg>
+            Programmations
+        </a>
+
+        <a href="/publicites/payer-societe" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md group transition-all duration-200 <%= "payer-societe".equals(activePage) ? "bg-white text-brand-600 shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" %>">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-colors <%= "payer-societe".equals(activePage) ? "text-brand-500" : "text-gray-400 group-hover:text-gray-500" %>">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75m0 1.5v.75m0 1.5v.75m0 1.5V15m-1.5-1.5h1.5m-1.5-1.5h1.5m-1.5-1.5h1.5m-1.5-1.5h1.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Paiement Société
+        </a>
+
+        <a href="/publicites/factures" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md group transition-all duration-200 <%= "factures-societe".equals(activePage) ? "bg-white text-brand-600 shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" %>">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-colors <%= "factures-societe".equals(activePage) ? "text-brand-500" : "text-gray-400 group-hover:text-gray-500" %>">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            Factures Société
+        </a>
+
         <!-- Section: Settings -->
         <div class="px-3 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
             Paramètres
@@ -128,12 +154,6 @@
             État des Comptes
         </a>
 
-        <a href="/publicites/payer-societe" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md group transition-all duration-200 <%= "publicites-payer-societe".equals(activePage) ? "bg-white text-brand-600 shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" %>">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-colors <%= "publicites-payer-societe".equals(activePage) ? "text-brand-500" : "text-gray-400 group-hover:text-gray-500" %>">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-            </svg>
-            Paiement Société
-        </a>
 
         <a href="/societes" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md group transition-all duration-200 <%= "societes".equals(activePage) ? "bg-white text-brand-600 shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" %>">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-colors <%= "societes".equals(activePage) ? "text-brand-500" : "text-gray-400 group-hover:text-gray-500" %>">

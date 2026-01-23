@@ -65,21 +65,30 @@ public class PaymentPubliciteService {
         List<DiffusionProgrammation> programmations = programmationRepository.findByDiffusionSocieteId(societeId);
         if (programmations.isEmpty()) return;
 
-        BigDecimal totalDu = programmations.stream()
-                .map(dp -> publiciteService.getMontantForProgrammationPublic(dp))
+        BigDecimal totalReste = programmations.stream()
+                .map(dp -> publiciteService.getResteAPayer(dp))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (totalDu.compareTo(BigDecimal.ZERO) == 0) return;
+        if (totalReste.compareTo(BigDecimal.ZERO) == 0) return;
 
-        // Calculer le ratio de paiement (ex: 500k / 1M = 0.5)
-        BigDecimal ratio = montantTotal.divide(totalDu, 10, RoundingMode.HALF_UP);
+        // Calculer le ratio de paiement sur le RESTE À PAYER
+        // Si je dois 1M et je paie 500k, le ratio est 0.5
+        BigDecimal ratio = montantTotal.divide(totalReste, 10, RoundingMode.HALF_UP);
 
         for (DiffusionProgrammation dp : programmations) {
-            BigDecimal montantDiffusion = publiciteService.getMontantForProgrammationPublic(dp);
-            // Appliquer le même ratio à chaque diffusion
-            BigDecimal montantAPayer = montantDiffusion.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal restePourCetteDiffusion = publiciteService.getResteAPayer(dp);
+            
+            // Si rien à payer sur cette diffusion, on passe
+            if (restePourCetteDiffusion.compareTo(BigDecimal.ZERO) <= 0) continue;
+
+            // Appliquer le ratio sur le montant restant
+            BigDecimal montantAPayer = restePourCetteDiffusion.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
             
             if (montantAPayer.compareTo(BigDecimal.ZERO) > 0) {
+                // On s'assure de ne pas payer plus que le reste (cas d'arrondi ou surpaiement global)
+                if (montantAPayer.compareTo(restePourCetteDiffusion) > 0) {
+                    montantAPayer = restePourCetteDiffusion;
+                }
                 savePayment(dp.getId(), montantAPayer, date);
             }
         }
