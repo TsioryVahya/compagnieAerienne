@@ -175,3 +175,34 @@ CREATE TABLE payment_details_diffusion (
     date_payment TIMESTAMP NOT NULL,
     montant DECIMAL(15,2) NOT NULL
 );
+
+-- Table des produits extras (ex: Eau, Snack, etc.)
+CREATE TABLE produit_extra (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL
+);
+
+-- Table des tarifs des produits extras
+CREATE TABLE tarif_produit_extra (
+    id SERIAL PRIMARY KEY,
+    id_produit_extra INTEGER REFERENCES produit_extra(id),
+    prix DECIMAL(10,2) NOT NULL,
+    date_application TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- Table des ventes de produits aux clients
+CREATE TABLE vente_produit (
+    id SERIAL PRIMARY KEY,
+    id_client INTEGER REFERENCES client(id),
+    date_vente TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Détails des ventes de produits
+CREATE TABLE vente_produit_detail (
+    id SERIAL PRIMARY KEY,
+    id_vente_produit INTEGER REFERENCES vente_produit(id),
+    id_produit_extra INTEGER REFERENCES produit_extra(id),
+    quantite INTEGER NOT NULL,
+    prix_unitaire DECIMAL(10,2) NOT NULL -- Prix au moment de la vente pour l'historique
+);
