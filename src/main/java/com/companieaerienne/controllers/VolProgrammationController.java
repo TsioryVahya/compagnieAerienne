@@ -9,6 +9,8 @@ import com.companieaerienne.services.VolService;
 import com.companieaerienne.services.ClasseService;
 import com.companieaerienne.services.TarifVolService;
 import com.companieaerienne.services.ClassePlaceService;
+import com.companieaerienne.entities.VenteProduitDetail;
+import com.companieaerienne.services.ProduitExtraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -59,6 +61,9 @@ public class VolProgrammationController {
     @Autowired
     private com.companieaerienne.services.PubliciteService publiciteService;
 
+    @Autowired
+    private com.companieaerienne.services.ProduitExtraService produitExtraService;
+
     @GetMapping
     public String list(@RequestParam(required = false) String depart,
                       @RequestParam(required = false) String arrivee,
@@ -100,9 +105,21 @@ public class VolProgrammationController {
     }
 
     @GetMapping("/rapport-ca-global")
-    public String rapportCAGlobal(Model model) {
+    public String rapportCAGlobal(@RequestParam(required = false) Integer year,
+                                @RequestParam(required = false) Integer month,
+                                Model model) {
+        if (year == null) year = LocalDateTime.now().getYear();
+        if (month == null) month = LocalDateTime.now().getMonthValue();
+
         List<VolProgrammation> programmations = volProgrammationService.findAll();
         
+        // Filtrer par mois/année si nécessaire (optionnel selon le besoin de l'UI)
+        final int fYear = year;
+        final int fMonth = month;
+        programmations = programmations.stream()
+            .filter(p -> p.getDateHeure().getYear() == fYear && p.getDateHeure().getMonthValue() == fMonth)
+            .collect(Collectors.toList());
+
         Map<Integer, BigDecimal> ticketRevenues = new HashMap<>();
         Map<Integer, BigDecimal> pubRevenues = new HashMap<>();
         Map<Integer, BigDecimal> pubPaid = new HashMap<>();
@@ -122,15 +139,72 @@ public class VolProgrammationController {
             totalRevenues.put(p.getId(), ticketRev.add(pubRev));
         }
         
+        BigDecimal extraRevenue = produitExtraService.calculateMonthlyExtraRevenue(year, month);
+        
         model.addAttribute("programmations", programmations);
         model.addAttribute("ticketRevenues", ticketRevenues);
         model.addAttribute("pubRevenues", pubRevenues);
         model.addAttribute("pubPaid", pubPaid);
         model.addAttribute("pubRemaining", pubRemaining);
         model.addAttribute("totalRevenues", totalRevenues);
+        model.addAttribute("extraRevenue", extraRevenue);
+        model.addAttribute("selectedYear", year);
+        model.addAttribute("selectedMonth", month);
         model.addAttribute("activePage", "rapport-ca-global");
         
         return "vol-programmation/rapport-ca-global";
+    }
+
+    @GetMapping("/rapport-mensuel")
+    public String rapportMensuel(@RequestParam(required = false) Integer year,
+                                @RequestParam(required = false) Integer month,
+                                Model model) {
+        if (year == null) year = LocalDateTime.now().getYear();
+        if (month == null) month = LocalDateTime.now().getMonthValue();
+
+        List<VolProgrammation> programmations = volProgrammationService.findAll();
+        
+        final int fYear = year;
+        final int fMonth = month;
+        programmations = programmations.stream()
+            .filter(p -> p.getDateHeure().getYear() == fYear && p.getDateHeure().getMonthValue() == fMonth)
+            .collect(Collectors.toList());
+
+        Map<Integer, BigDecimal> ticketRevenues = new HashMap<>();
+        Map<Integer, BigDecimal> pubRevenues = new HashMap<>();
+        Map<Integer, BigDecimal> pubPaid = new HashMap<>();
+        Map<Integer, BigDecimal> pubRemaining = new HashMap<>();
+        Map<Integer, BigDecimal> totalRevenues = new HashMap<>();
+
+        for (VolProgrammation p : programmations) {
+            BigDecimal ticketRev = volProgrammationService.calculateRevenue(p);
+            BigDecimal pubRev = volProgrammationService.calculatePubliciteRevenue(p);
+            BigDecimal paid = volProgrammationService.calculatePublicitePaid(p);
+            BigDecimal remaining = volProgrammationService.calculatePubliciteRemaining(p);
+            
+            ticketRevenues.put(p.getId(), ticketRev);
+            pubRevenues.put(p.getId(), pubRev);
+            pubPaid.put(p.getId(), paid);
+            pubRemaining.put(p.getId(), remaining);
+            totalRevenues.put(p.getId(), ticketRev.add(pubRev));
+        }
+        
+        BigDecimal extraRevenue = produitExtraService.calculateMonthlyExtraRevenue(year, month);
+        List<VenteProduitDetail> extraDetails = produitExtraService.findMonthlySaleDetails(year, month);
+        
+        model.addAttribute("programmations", programmations);
+        model.addAttribute("ticketRevenues", ticketRevenues);
+        model.addAttribute("pubRevenues", pubRevenues);
+        model.addAttribute("pubPaid", pubPaid);
+        model.addAttribute("pubRemaining", pubRemaining);
+        model.addAttribute("totalRevenues", totalRevenues);
+        model.addAttribute("extraRevenue", extraRevenue);
+        model.addAttribute("extraDetails", extraDetails);
+        model.addAttribute("selectedYear", year);
+        model.addAttribute("selectedMonth", month);
+        model.addAttribute("activePage", "rapport-mensuel");
+        
+        return "vol-programmation/rapport-mensuel";
     }
 
     @GetMapping("/revenus-details/{id}")
