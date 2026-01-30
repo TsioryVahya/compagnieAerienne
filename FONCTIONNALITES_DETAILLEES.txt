@@ -1,0 +1,1028 @@
+═══════════════════════════════════════════════════════════════════════════════
+     DÉTAILS DES 6 FONCTIONNALITÉS PRINCIPALES - COMPAGNIE AÉRIENNE
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 1 : RÉSERVATION D'UN VOL TANA → NOSY BE                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS UTILISÉES + EMPLACEMENT :
+
+A) Recherche du vol disponible
+   - Classe: VolController
+   - Fonction: 
+     public String findAll(
+         @RequestParam(required = false) String depart,
+         @RequestParam(required = false) String arrivee,
+         Model model
+     )
+     Emplacement: VolController.java (ligne 22)
+     Explication: Filtre les vols par aéroport de départ (Tana) et arrivée (Nosy Be)
+
+B) Récupération des programmations du vol
+   - Classe: VolRestController
+   - Fonction:
+     public List<VolProgrammation> getVolProgrammations(
+         @PathVariable Integer volId
+     )
+     Emplacement: VolRestController.java (ligne 22)
+     Explication: Retourne toutes les dates/heures disponibles pour le vol Tana-Nosy Be
+
+C) Création de la réservation
+   - Classe: ReservationController
+   - Fonction:
+     public String createForm(
+         @RequestParam(required = false) Integer volId,
+         @RequestParam(required = false) Integer volProgrammationId,
+         Model model
+     )
+     Emplacement: ReservationController.java (ligne 60)
+     Explication: Affiche le formulaire avec vol pré-sélectionné et places disponibles
+
+D) Sauvegarde de la réservation
+   - Classe: ReservationController
+   - Fonction:
+     public String save(@ModelAttribute Reservation entity)
+     Emplacement: ReservationController.java (ligne 85)
+     Explication: Enregistre la réservation avec client, vol programmé, places sélectionnées
+
+E) Vérification des places disponibles
+   - Classe: VolProgrammationService
+   - Fonction:
+     public Map<Integer, List<Integer>> getPlacesDisponibles(
+         Integer volProgrammationId
+     )
+     Emplacement: VolProgrammationService.java
+     Explication: Calcule places disponibles = capacité avion - places réservées
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables: reservation, vol_programmation, vol, aeroport, avion, client
+
+3.4. POUR LES VUES :
+
+3.4.1. LES COLONNES :
+   SELECT 
+       r.id as reservation_id,
+       r.nombre_places,
+       r.id_client,
+       r.id_vol_programmation,
+       vp.date_heure,
+       v.id as vol_id,
+       v.duree,
+       ad.nom as aeroport_depart,
+       aa.nom as aeroport_arrivee,
+       av.matricule,
+       av.capacite,
+       c.nom as client_nom,
+       c.prenom as client_prenom,
+       c.email
+
+3.4.2. LA TABLE / VUE PRINCIPALE :
+   reservation (table principale)
+
+3.4.3. TABLES ANNEXES AVEC TYPE DE LIAISON :
+   ┌─────────────────────────┬──────────────┬────────────────────────────┐
+   │ Table Annexe            │ Type Liaison │ Colonne de Liaison         │
+   ├─────────────────────────┼──────────────┼────────────────────────────┤
+   │ vol_programmation       │ ManyToOne    │ id_vol_programmation (FK)  │
+   │ client                  │ ManyToOne    │ id_client (FK)             │
+   │ vol                     │ ManyToOne    │ vol_programmation.id_vol   │
+   │ aeroport (départ)       │ ManyToOne    │ vol.id_aeroport_depart     │
+   │ aeroport (arrivée)      │ ManyToOne    │ vol.id_aeroport_arrivee    │
+   │ avion                   │ ManyToOne    │ vol_programmation.id_avion │
+   │ reservation_place       │ OneToMany    │ id_reservation (FK)        │
+   └─────────────────────────┴──────────────┴────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 2 : AVION AVEC CLASSES (PREMIÈRE, PREMIUM, ÉCO) + CA VOL   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS UTILISÉES + EMPLACEMENT :
+
+A) Configuration des classes par avion
+   - Classe: ClassePlaceRestController
+   - Fonction:
+     public List<ClassePlace> getClassesForAvion(
+         @PathVariable Integer avionId
+     )
+     Emplacement: ClassePlaceRestController.java
+     Explication: Retourne la configuration des classes (places 1-20 = Première,
+                  21-80 = Premium, 81-350 = Éco) pour un avion spécifique
+
+B) Définition des tarifs par classe
+   - Classe: TarifVolService
+   - Fonction:
+     public List<TarifVol> getTarifsByVolProgrammationAndClasse(
+         Integer volProgrammationId,
+         Integer classeId
+     )
+     Emplacement: TarifVolService.java
+     Explication: Récupère les prix pour chaque classe (ex: Première=2500€, 
+                  Premium=1200€, Éco=450€)
+
+C) Calcul du CA par classe
+   - Classe: VolProgrammationController
+   - Fonction:
+     public String details(
+         @PathVariable Integer id,
+         Model model
+     )
+     Emplacement: VolProgrammationController.java (ligne 236)
+     Explication: Affiche détails du vol avec CA par classe
+
+D) Calcul du CA total du vol
+   - Classe: VolProgrammationService
+   - Fonction:
+     public BigDecimal calculateRevenue(VolProgrammation volProgrammation)
+     Emplacement: VolProgrammationService.java
+     Explication: CA = Σ (nb_places_classe × tarif_classe) pour toutes les classes
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables: classe_place, classe, tarif_vol, reservation, reservation_place
+
+3.4. POUR LES VUES :
+
+3.4.1. LES COLONNES :
+   SELECT 
+       c.id as classe_id,
+       c.nom as classe_nom,
+       cp.place_debut,
+       cp.place_fin,
+       tv.tarif,
+       COUNT(rp.place) as places_vendues,
+       (cp.place_fin - cp.place_debut + 1) as places_totales,
+       COUNT(rp.place) * tv.tarif as ca_classe
+
+3.4.2. LA TABLE / VUE PRINCIPALE :
+   classe_place (table principale définissant les intervalles de places)
+
+3.4.3. TABLES ANNEXES AVEC TYPE DE LIAISON :
+   ┌─────────────────────────┬──────────────┬────────────────────────────┐
+   │ Table Annexe            │ Type Liaison │ Colonne de Liaison         │
+   ├─────────────────────────┼──────────────┼────────────────────────────┤
+   │ classe                  │ ManyToOne    │ id_classe (FK, PK)         │
+   │ avion                   │ ManyToOne    │ id_avion (FK, PK)          │
+   │ tarif_vol               │ OneToMany    │ tarif_vol.id_classe        │
+   │ reservation_place       │ OneToMany    │ JOIN sur place BETWEEN     │
+   │                         │              │ place_debut AND place_fin  │
+   │ reservation             │ ManyToOne    │ reservation_place.id_res   │
+   │ vol_programmation       │ ManyToOne    │ reservation.id_vol_prog    │
+   └─────────────────────────┴──────────────┴────────────────────────────┘
+
+REQUÊTE SQL POUR CA PAR CLASSE :
+────────────────────────────────
+SELECT 
+    c.nom as classe,
+    COUNT(DISTINCT rp.id_reservation) as nb_reservations,
+    COUNT(rp.place) as places_vendues,
+    tv.tarif,
+    SUM(tv.tarif) as ca_classe
+FROM classe c
+INNER JOIN classe_place cp ON c.id = cp.id_classe
+INNER JOIN tarif_vol tv ON c.id = tv.id_classe
+LEFT JOIN reservation r ON r.id_vol_programmation = tv.id_vol_programmation
+LEFT JOIN reservation_place rp ON r.id = rp.id_reservation
+    AND rp.place BETWEEN cp.place_debut AND cp.place_fin
+WHERE tv.id_vol_programmation = ?
+GROUP BY c.id, c.nom, tv.tarif;
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 3 : TYPES PASSAGERS (ENFANT/ADULTE) + PRIX DIFFÉRENTS      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS UTILISÉES + EMPLACEMENT :
+
+A) Gestion des types de passagers
+   - Classe: TypePassagerController
+   - Fonction:
+     public List<TypePassager> findAll(Model model)
+     Emplacement: TypePassagerController.java (ligne 17)
+     Explication: Récupère tous les types (Adulte, Enfant, Bébé, Senior)
+
+B) Définition des tarifs par type
+   - Classe: TarifVolService
+   - Fonction:
+     public TarifVol getTarifByVolClasseAndType(
+         Integer volProgrammationId,
+         Integer classeId,
+         Integer typePassagerId
+     )
+     Emplacement: TarifVolService.java
+     Explication: Retourne le tarif spécifique pour type de passager
+                  (ex: Adulte Éco=450€, Enfant Éco=300€)
+
+C) Application des remises tarifaires
+   - Classe: RemiseTarifRestController / RemiseTarifService
+   - Fonction:
+     public List<RemiseTarif> getRemisesByVolAndClasse(
+         Integer volProgrammationId,
+         Integer classeId
+     )
+     Emplacement: RemiseTarifService.java
+     Explication: Récupère les remises configurées (ex: Enfant -30% vs Adulte)
+
+D) Calcul du prix final avec remise
+   - Classe: RemiseTarifService
+   - Fonction:
+     public BigDecimal calculateTarifWithRemise(
+         BigDecimal tarifBase,
+         RemiseTarif remise
+     )
+     Emplacement: RemiseTarifService.java
+     Explication: Applique la formule selon remise.formule
+                  Si "%" : tarifBase × (1 - remise/100)
+                  Si "-" : tarifBase - remise
+
+E) CA du vol par type de passager
+   - Classe: VolProgrammationController
+   - Fonction:
+     public String revenusDetails(
+         @PathVariable Integer id,
+         Model model
+     )
+     Emplacement: VolProgrammationController.java (ligne 210)
+     Explication: Affiche CA détaillé avec répartition par type passager
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables: type_passager, tarif_vol, remise_tarif, reservation_place
+
+3.4. POUR LES VUES :
+
+3.4.1. LES COLONNES :
+   SELECT 
+       tp.id as type_passager_id,
+       tp.nom as type_passager_nom,
+       c.nom as classe_nom,
+       tv.tarif as tarif_base,
+       rt.remise,
+       rt.formule as remise_formule,
+       CASE 
+           WHEN rt.formule = '%' THEN tv.tarif * (1 - rt.remise/100)
+           WHEN rt.formule = '-' THEN tv.tarif - rt.remise
+           ELSE tv.tarif
+       END as tarif_final,
+       COUNT(rp.place) as nb_passagers,
+       SUM(tarif_final) as ca_type_passager
+
+3.4.2. LA TABLE / VUE PRINCIPALE :
+   tarif_vol (table principale des tarifs)
+
+3.4.3. TABLES ANNEXES AVEC TYPE DE LIAISON :
+   ┌─────────────────────────┬──────────────┬────────────────────────────┐
+   │ Table Annexe            │ Type Liaison │ Colonne de Liaison         │
+   ├─────────────────────────┼──────────────┼────────────────────────────┤
+   │ type_passager           │ ManyToOne    │ id_type_passager (FK)      │
+   │ classe                  │ ManyToOne    │ id_classe (FK)             │
+   │ vol_programmation       │ ManyToOne    │ id_vol_programmation (FK)  │
+   │ remise_tarif            │ OneToOne     │ id_type_passager_appliquer │
+   │                         │              │ = tarif_vol.id_type_pass   │
+   │ reservation_place       │ OneToMany    │ id_type_passager (FK)      │
+   │ reservation             │ ManyToOne    │ reservation_place.id_res   │
+   └─────────────────────────┴──────────────┴────────────────────────────┘
+
+EXEMPLE DE CONFIGURATION :
+─────────────────────────
+• Adulte Économique : 450€ (tarif de base)
+• Enfant Économique : 300€ (remise -30% par rapport Adulte)
+• Bébé Économique   : 50€  (remise -400€ fixe par rapport Adulte)
+
+Enregistrement dans remise_tarif :
+  - id_type_passager_appliquer = Enfant
+  - id_type_passager_reference = Adulte
+  - remise = 30
+  - formule = "%"
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 4 : PUBLICITÉS 400,000 Ar PAR DIFFUSION + CA TOTAL         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS UTILISÉES + EMPLACEMENT :
+
+A) Gestion du tarif de publicité
+   - Classe: TarifPubController
+   - Fonction:
+     public TarifPub getCurrentTarif()
+     Emplacement: TarifPubService.java
+     Explication: Récupère le tarif actuel de pub (400,000 Ar par diffusion)
+                  = tarif le plus récent où date_application <= aujourd'hui
+
+B) Programmation d'une diffusion
+   - Classe: DiffusionController
+   - Fonction:
+     public String save(@ModelAttribute DiffusionProgrammation entity)
+     Emplacement: DiffusionController.java
+     Explication: Enregistre programmation avec nombre de diffusions
+                  (ex: 5 diffusions = 5 × 400,000 = 2,000,000 Ar)
+
+C) Calcul du montant à facturer
+   - Classe: DiffusionProgrammationService
+   - Fonction:
+     public BigDecimal calculateMontantDiffusion(
+         Integer diffusionProgrammationId
+     )
+     Emplacement: DiffusionProgrammationService.java
+     Explication: Montant = nombre_diffusions × tarif_pub_actuel
+                  Ex: 5 diffusions × 400,000 Ar = 2,000,000 Ar
+
+D) CA des publicités pour un vol
+   - Classe: VolProgrammationController
+   - Fonction:
+     public String revenusDetails(
+         @PathVariable Integer id,
+         Model model
+     )
+     Emplacement: VolProgrammationController.java (ligne 210)
+     Explication: Affiche section "PUBLICITÉS" avec détails par société
+
+E) Détails des diffusions
+   - Classe: DiffusionProgrammationService
+   - Fonction:
+     public List<Map<String, Object>> getDiffusionsDetailsForVol(
+         Integer volProgrammationId
+     )
+     Emplacement: DiffusionProgrammationService.java
+     Explication: Retourne liste avec nom_diffusion, nom_societe, nb_diffusions,
+                  tarif_unitaire, montant_total
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables: diffusion_programmation, diffusion, societe, tarif_pub
+
+3.4. POUR LES VUES :
+
+3.4.1. LES COLONNES :
+   SELECT 
+       dp.id as diffusion_programmation_id,
+       d.nom as nom_diffusion,
+       s.nom as nom_societe,
+       dp.nombre_diffusions,
+       dp.date_programmation,
+       tp.montant as tarif_unitaire,
+       (dp.nombre_diffusions * tp.montant) as montant_total,
+       vp.date_heure as date_vol
+
+3.4.2. LA TABLE / VUE PRINCIPALE :
+   diffusion_programmation (table principale)
+
+3.4.3. TABLES ANNEXES AVEC TYPE DE LIAISON :
+   ┌─────────────────────────┬──────────────┬────────────────────────────┐
+   │ Table Annexe            │ Type Liaison │ Colonne de Liaison         │
+   ├─────────────────────────┼──────────────┼────────────────────────────┤
+   │ diffusion               │ ManyToOne    │ id_diffusion (FK)          │
+   │ societe                 │ ManyToOne    │ diffusion.id_societe       │
+   │ vol_programmation       │ ManyToOne    │ id_vol_programmation (FK)  │
+   │ tarif_pub               │ ManyToOne    │ Sous-requête MAX(date)     │
+   │                         │              │ WHERE date <= date_prog    │
+   └─────────────────────────┴──────────────┴────────────────────────────┘
+
+REQUÊTE SQL POUR CA PUBLICITÉS D'UN VOL :
+─────────────────────────────────────────
+SELECT 
+    s.nom as societe,
+    d.nom as diffusion,
+    dp.nombre_diffusions,
+    tp.montant as tarif_unitaire,
+    (dp.nombre_diffusions * tp.montant) as montant_total
+FROM diffusion_programmation dp
+INNER JOIN diffusion d ON dp.id_diffusion = d.id
+INNER JOIN societe s ON d.id_societe = s.id
+INNER JOIN (
+    SELECT montant 
+    FROM tarif_pub 
+    WHERE date_application <= dp.date_programmation
+    ORDER BY date_application DESC 
+    LIMIT 1
+) tp
+WHERE dp.id_vol_programmation = ?;
+
+EXEMPLE CONCRET :
+────────────────
+Vol Tana → Nosy Be du 15/02/2026
+  - Coca-Cola : 5 diffusions × 400,000 Ar = 2,000,000 Ar
+  - Nike      : 3 diffusions × 400,000 Ar = 1,200,000 Ar
+  - Samsung   : 2 diffusions × 400,000 Ar =   800,000 Ar
+  ───────────────────────────────────────────────────────
+  TOTAL CA PUBLICITÉS                  = 4,000,000 Ar
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 5 : CA TOTAL AVEC MONTANTS PAYÉS ET RESTANTS               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS UTILISÉES + EMPLACEMENT :
+
+A) Calcul du CA total d'un vol
+   - Classe: VolProgrammationService
+   - Fonction:
+     public BigDecimal calculateRevenue(VolProgrammation volProgrammation)
+     Emplacement: VolProgrammationService.java
+     Explication: CA Total = CA_Réservations + CA_Produits_Extras + CA_Publicités
+
+B) Détails des paiements de publicités
+   - Classe: PaymentDiffusionService
+   - Fonction:
+     public Map<String, BigDecimal> getPaymentStatusForVol(
+         Integer volProgrammationId
+     )
+     Emplacement: PaymentDiffusionService.java
+     Explication: Retourne {montant_total, montant_paye, montant_reste}
+
+C) Enregistrement d'un paiement
+   - Classe: PaymentDiffusionService
+   - Fonction:
+     public PaymentDetailsDiffusion addPayment(
+         Integer paymentDiffusionId,
+         BigDecimal montant
+     )
+     Emplacement: PaymentDiffusionService.java
+     Explication: Ajoute un paiement partiel ou total
+
+D) Affichage du rapport détaillé
+   - Classe: VolProgrammationController
+   - Fonction:
+     public String revenusDetails(
+         @PathVariable Integer id,
+         Model model
+     )
+     Emplacement: VolProgrammationController.java (ligne 210)
+     Explication: Affiche CA total avec décomposition et statut paiements
+
+E) Calcul du montant payé
+   - Classe: PaymentDetailsDiffusionService
+   - Fonction:
+     public BigDecimal getTotalPaye(Integer paymentDiffusionId)
+     Emplacement: PaymentDetailsDiffusionService.java
+     Explication: SUM(montant) depuis payment_details_diffusion
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables: payment_diffusion, payment_details_diffusion, diffusion_programmation
+
+3.4. POUR LES VUES :
+
+3.4.1. LES COLONNES :
+   SELECT 
+       vp.id as vol_programmation_id,
+       -- CA Réservations
+       COALESCE(SUM(tv.tarif), 0) as ca_reservations,
+       -- CA Produits Extras
+       COALESCE(SUM(vpd.quantite * vpd.prix_unitaire), 0) as ca_produits,
+       -- CA Publicités (montant à facturer)
+       COALESCE(SUM(dp.nombre_diffusions * tp.montant), 0) as ca_publicites,
+       -- Total CA
+       (ca_reservations + ca_produits + ca_publicites) as ca_total,
+       -- Montants payés
+       COALESCE(SUM(pdd.montant), 0) as montant_paye,
+       -- Reste à payer
+       (ca_publicites - montant_paye) as montant_reste
+
+3.4.2. LA TABLE / VUE PRINCIPALE :
+   vol_programmation (table principale agrégative)
+
+3.4.3. TABLES ANNEXES AVEC TYPE DE LIAISON :
+   ┌─────────────────────────┬──────────────┬────────────────────────────┐
+   │ Table Annexe            │ Type Liaison │ Colonne de Liaison         │
+   ├─────────────────────────┼──────────────┼────────────────────────────┤
+   │ reservation             │ OneToMany    │ id_vol_programmation (FK)  │
+   │ tarif_vol               │ ManyToOne    │ JOIN via type_passager     │
+   │ vente_produit           │ OneToMany    │ JOIN via client/vol        │
+   │ vente_produit_detail    │ OneToMany    │ id_vente_produit (FK)      │
+   │ diffusion_programmation │ OneToMany    │ id_vol_programmation (FK)  │
+   │ payment_diffusion       │ OneToMany    │ id_diffusion_prog (FK)     │
+   │ payment_details_diff    │ OneToMany    │ id_payment (FK)            │
+   │ tarif_pub               │ Sous-requête │ MAX(date) <= date_vol      │
+   └─────────────────────────┴──────────────┴────────────────────────────┘
+
+REQUÊTE SQL COMPLÈTE POUR CA + PAIEMENTS :
+──────────────────────────────────────────
+SELECT 
+    vp.id,
+    vp.date_heure,
+    
+    -- 1. CA Réservations
+    COALESCE(SUM(DISTINCT tv.tarif * r.nombre_places), 0) as ca_reservations,
+    
+    -- 2. CA Produits Extras
+    COALESCE(SUM(DISTINCT vpd.quantite * vpd.prix_unitaire), 0) as ca_produits,
+    
+    -- 3. CA Publicités (à facturer)
+    COALESCE(SUM(DISTINCT dp.nombre_diffusions * tp.montant), 0) as ca_publicites,
+    
+    -- 4. Total CA
+    (ca_reservations + ca_produits + ca_publicites) as ca_total,
+    
+    -- 5. Montants payés
+    COALESCE(SUM(DISTINCT pdd.montant), 0) as montant_paye,
+    
+    -- 6. Reste à payer
+    (ca_publicites - montant_paye) as montant_reste,
+    
+    -- 7. Statut paiement
+    CASE 
+        WHEN montant_paye = 0 THEN 'Non payé'
+        WHEN montant_paye < ca_publicites THEN 'Partiellement payé'
+        WHEN montant_paye >= ca_publicites THEN 'Payé intégralement'
+    END as statut_paiement
+
+FROM vol_programmation vp
+
+-- Réservations
+LEFT JOIN reservation r ON vp.id = r.id_vol_programmation
+LEFT JOIN reservation_place rp ON r.id = rp.id_reservation
+LEFT JOIN tarif_vol tv ON vp.id = tv.id_vol_programmation 
+    AND rp.id_type_passager = tv.id_type_passager
+
+-- Produits extras
+LEFT JOIN vente_produit vp2 ON r.id_client = vp2.id_client
+LEFT JOIN vente_produit_detail vpd ON vp2.id = vpd.id_vente_produit
+
+-- Publicités
+LEFT JOIN diffusion_programmation dp ON vp.id = dp.id_vol_programmation
+LEFT JOIN diffusion d ON dp.id_diffusion = d.id
+LEFT JOIN (
+    SELECT montant FROM tarif_pub 
+    WHERE date_application <= CURRENT_DATE 
+    ORDER BY date_application DESC LIMIT 1
+) tp
+
+-- Paiements
+LEFT JOIN payment_diffusion pd ON dp.id = pd.id_diffusion_programmation
+LEFT JOIN payment_details_diffusion pdd ON pd.id = pdd.id_payment
+
+WHERE vp.id = ?
+GROUP BY vp.id, vp.date_heure;
+
+EXEMPLE CONCRET :
+────────────────
+Vol Tana → Nosy Be du 15/02/2026
+
+1. CA Réservations        : 45,200,000 Ar (240 places vendues)
+2. CA Produits Extras     :  3,850,000 Ar (repas, boissons)
+3. CA Publicités          :  4,000,000 Ar (10 diffusions totales)
+   ──────────────────────────────────────────────────
+   CA TOTAL               : 53,050,000 Ar
+
+DÉTAIL DES PAIEMENTS PUBLICITÉS :
+   - Coca-Cola doit        : 2,000,000 Ar
+     • Payé le 10/02       : 1,000,000 Ar
+     • Payé le 14/02       : 1,000,000 Ar
+     STATUT: Payé intégralement ✓
+
+   - Nike doit             : 1,200,000 Ar
+     • Payé le 12/02       :   800,000 Ar
+     RESTE À PAYER         :   400,000 Ar ⚠
+     STATUT: Partiellement payé
+
+   - Samsung doit          :   800,000 Ar
+     • Aucun paiement
+     RESTE À PAYER         :   800,000 Ar ⚠
+     STATUT: Non payé
+
+TOTAL PUBLICITÉS PAYÉES  : 2,800,000 Ar
+TOTAL RESTE À PAYER      : 1,200,000 Ar
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 6 : VENTE DE PRODUITS EXTRAS PAR SOCIÉTÉS + CA VOL         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS UTILISÉES + EMPLACEMENT :
+
+A) Gestion des produits extras
+   - Classe: ProduitExtraController
+   - Fonction:
+     public List<ProduitExtra> findAll(String nom, Model model)
+     Emplacement: ProduitExtraController.java
+     Explication: Liste des produits disponibles (repas, boissons, kit voyage, etc.)
+
+B) Gestion des tarifs produits
+   - Classe: TarifProduitExtraService
+   - Fonction:
+     public TarifProduitExtra getCurrentTarif(Integer produitExtraId)
+     Emplacement: TarifProduitExtraService.java
+     Explication: Récupère prix actuel du produit (tarif le plus récent)
+
+C) Enregistrement d'une vente
+   - Classe: VenteProduitService
+   - Fonction:
+     public VenteProduit createVente(
+         Integer clientId,
+         List<VenteProduitDetail> details
+     )
+     Emplacement: VenteProduitService.java
+     Explication: Crée vente avec plusieurs produits pour un client
+                  (ex: 2 repas + 1 boisson)
+
+D) CA produits extras pour un vol
+   - Classe: VolProgrammationController
+   - Fonction:
+     public String revenusDetails(
+         @PathVariable Integer id,
+         Model model
+     )
+     Emplacement: VolProgrammationController.java (ligne 210)
+     Explication: Section "PRODUITS EXTRAS" avec détails par produit
+
+E) Calcul du CA produits d'un vol
+   - Classe: VenteProduitService
+   - Fonction:
+     public BigDecimal calculateCaProduitsForVol(Integer volProgrammationId)
+     Emplacement: VenteProduitService.java
+     Explication: SUM(quantité × prix_unitaire) pour tous clients du vol
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables: vente_produit, vente_produit_detail, produit_extra, 
+             tarif_produit_extra, client, reservation
+
+3.4. POUR LES VUES :
+
+3.4.1. LES COLONNES :
+   SELECT 
+       pe.id as produit_id,
+       pe.nom as produit_nom,
+       tpe.prix as prix_unitaire,
+       vpd.quantite,
+       (vpd.quantite * vpd.prix_unitaire) as montant_vente,
+       vp.date_vente,
+       c.nom as client_nom,
+       c.prenom as client_prenom,
+       r.id as reservation_id,
+       vol_prog.id as vol_programmation_id
+
+3.4.2. LA TABLE / VUE PRINCIPALE :
+   vente_produit_detail (table principale des lignes de vente)
+
+3.4.3. TABLES ANNEXES AVEC TYPE DE LIAISON :
+   ┌─────────────────────────┬──────────────┬────────────────────────────┐
+   │ Table Annexe            │ Type Liaison │ Colonne de Liaison         │
+   ├─────────────────────────┼──────────────┼────────────────────────────┤
+   │ vente_produit           │ ManyToOne    │ id_vente_produit (FK)      │
+   │ produit_extra           │ ManyToOne    │ id_produit_extra (FK)      │
+   │ tarif_produit_extra     │ ManyToOne    │ Sous-requête MAX(date)     │
+   │ client                  │ ManyToOne    │ vente_produit.id_client    │
+   │ reservation             │ OneToMany    │ JOIN client.id             │
+   │ vol_programmation       │ ManyToOne    │ reservation.id_vol_prog    │
+   └─────────────────────────┴──────────────┴────────────────────────────┘
+
+REQUÊTE SQL POUR CA PRODUITS EXTRAS D'UN VOL :
+──────────────────────────────────────────────
+SELECT 
+    pe.nom as produit,
+    SUM(vpd.quantite) as quantite_totale,
+    vpd.prix_unitaire,
+    SUM(vpd.quantite * vpd.prix_unitaire) as ca_produit
+FROM vol_programmation vp
+INNER JOIN reservation r ON vp.id = r.id_vol_programmation
+INNER JOIN client c ON r.id_client = c.id
+INNER JOIN vente_produit vp2 ON c.id = vp2.id_client
+INNER JOIN vente_produit_detail vpd ON vp2.id = vpd.id_vente_produit
+INNER JOIN produit_extra pe ON vpd.id_produit_extra = pe.id
+WHERE vp.id = ?
+  AND vp2.date_vente BETWEEN vp.date_heure - INTERVAL '1 day' 
+                         AND vp.date_heure + INTERVAL '1 day'
+GROUP BY pe.id, pe.nom, vpd.prix_unitaire
+ORDER BY ca_produit DESC;
+
+EXEMPLE CONCRET :
+────────────────
+Vol Tana → Nosy Be du 15/02/2026 (240 passagers)
+
+VENTES DE PRODUITS EXTRAS :
+┌─────────────────────┬──────────┬────────────┬──────────────┐
+│ Produit             │ Quantité │ Prix Unit  │ CA Total     │
+├─────────────────────┼──────────┼────────────┼──────────────┤
+│ Repas chaud         │ 150      │ 15,000 Ar  │ 2,250,000 Ar │
+│ Boisson alcoolisée  │ 80       │ 8,000 Ar   │   640,000 Ar │
+│ Boisson soft        │ 120      │ 5,000 Ar   │   600,000 Ar │
+│ Kit voyage          │ 30       │ 12,000 Ar  │   360,000 Ar │
+│ Couverture          │ 0        │ 5,000 Ar   │         0 Ar │
+└─────────────────────┴──────────┴────────────┴──────────────┘
+                                    TOTAL CA : 3,850,000 Ar
+
+DÉTAIL PAR CLIENT (exemple) :
+─────────────────────────────
+Client: Rakoto Jean (Réservation #125)
+  - 2 × Repas chaud     = 30,000 Ar
+  - 1 × Boisson soft    =  5,000 Ar
+  Sous-total client     = 35,000 Ar
+
+Client: Razafy Marie (Réservation #126)
+  - 1 × Repas chaud     = 15,000 Ar
+  - 2 × Boisson alcool  = 16,000 Ar
+  - 1 × Kit voyage      = 12,000 Ar
+  Sous-total client     = 43,000 Ar
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                        SYNTHÈSE DU CA TOTAL DU VOL
+═══════════════════════════════════════════════════════════════════════════════
+
+EXEMPLE COMPLET : Vol Tana → Nosy Be du 15/02/2026
+
+1. CA RÉSERVATIONS (240 places vendues)
+   ─────────────────────────────────────
+   • Première Classe : 15 × 2,500,000 Ar = 37,500,000 Ar
+   • Premium         : 45 × 1,200,000 Ar = 54,000,000 Ar
+   • Économique      : 180 × 450,000 Ar  = 81,000,000 Ar
+                                           ──────────────
+   SOUS-TOTAL RÉSERVATIONS              = 172,500,000 Ar
+
+2. CA PRODUITS EXTRAS
+   ──────────────────
+   • Repas chaud     : 150 × 15,000 Ar  =  2,250,000 Ar
+   • Boissons        : 200 × variable   =  1,240,000 Ar
+   • Autres produits : 30 × variable    =    360,000 Ar
+                                           ──────────────
+   SOUS-TOTAL PRODUITS                  =   3,850,000 Ar
+
+3. CA PUBLICITÉS (10 diffusions)
+   ──────────────────────────────
+   • Coca-Cola       : 5 × 400,000 Ar   =  2,000,000 Ar
+   • Nike            : 3 × 400,000 Ar   =  1,200,000 Ar
+   • Samsung         : 2 × 400,000 Ar   =    800,000 Ar
+                                           ──────────────
+   SOUS-TOTAL PUBLICITÉS                =   4,000,000 Ar
+
+   ═══════════════════════════════════════════════════════
+   CHIFFRE D'AFFAIRES TOTAL DU VOL      = 180,350,000 Ar
+   ═══════════════════════════════════════════════════════
+
+STATUT DES PAIEMENTS PUBLICITÉS :
+──────────────────────────────────
+   • Montant à recevoir : 4,000,000 Ar
+   • Montant déjà payé  : 2,800,000 Ar (70%)
+   • Reste à payer      : 1,200,000 Ar (30%)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 7 : RAPPORT CA GLOBAL (PAGE vol-programmation/rapport-ca-global) │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS UTILISÉES + EMPLACEMENT :
+
+A) Génération du rapport CA global
+   - Classe: VolProgrammationController
+   - Fonction:
+     public String rapportCAGlobal(
+         @RequestParam(required = false) Integer year,
+         @RequestParam(required = false) Integer month,
+         Model model
+     )
+     Emplacement: VolProgrammationController.java (ligne 107)
+     Explication: Génère un rapport mensuel complet avec tous les CA 
+                  (réservations, publicités, produits extras) pour tous les vols
+                  du mois sélectionné. Par défaut: mois et année actuels.
+
+B) Calcul du CA réservations par vol
+   - Classe: VolProgrammationService
+   - Fonction:
+     public BigDecimal calculateRevenue(VolProgrammation volProgrammation)
+     Emplacement: VolProgrammationService.java
+     Explication: Calcule CA total des réservations pour un vol programmé
+                  = SUM(tarif × nombre_passagers) pour toutes les réservations
+
+C) Calcul du CA publicités par vol
+   - Classe: VolProgrammationService
+   - Fonction:
+     public BigDecimal calculatePubliciteRevenue(VolProgrammation p)
+     Emplacement: VolProgrammationService.java
+     Explication: Calcule CA publicités = SUM(nombre_diffusions × tarif_pub)
+                  pour toutes les diffusions programmées sur ce vol
+
+D) Calcul des paiements publicités effectués
+   - Classe: VolProgrammationService
+   - Fonction:
+     public BigDecimal calculatePublicitePaid(VolProgrammation p)
+     Emplacement: VolProgrammationService.java
+     Explication: Calcule montant déjà payé = SUM(payment_details_diffusion.montant)
+                  pour les publicités de ce vol
+
+E) Calcul des paiements restants
+   - Classe: VolProgrammationService
+   - Fonction:
+     public BigDecimal calculatePubliciteRemaining(VolProgrammation p)
+     Emplacement: VolProgrammationService.java
+     Explication: Calcule reste à payer = CA_publicités - montant_payé
+
+F) Calcul du CA produits extras mensuel
+   - Classe: ProduitExtraService
+   - Fonction:
+     public BigDecimal calculateMonthlyExtraRevenue(Integer year, Integer month)
+     Emplacement: ProduitExtraService.java
+     Explication: Calcule CA total des ventes de produits extras pour le mois
+                  = SUM(quantite × prix_unitaire) depuis vente_produit_detail
+                  WHERE MONTH(date_vente) = ? AND YEAR(date_vente) = ?
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables: vol_programmation, reservation, tarif_vol, diffusion_programmation,
+             payment_diffusion, payment_details_diffusion, vente_produit,
+             vente_produit_detail
+
+3.4. POUR LES VUES :
+
+3.4.1. LES COLONNES :
+   SELECT 
+       vp.id as vol_programmation_id,
+       vp.date_heure,
+       v.id as vol_id,
+       ad.nom as aeroport_depart,
+       aa.nom as aeroport_arrivee,
+       -- CA Réservations par vol
+       COALESCE(SUM(DISTINCT tv.tarif * COUNT(rp.place)), 0) as ca_reservations,
+       -- CA Publicités par vol
+       COALESCE(SUM(DISTINCT dp.nombre_diffusions * tp.montant), 0) as ca_publicites,
+       -- Montant publicités payé
+       COALESCE(SUM(DISTINCT pdd.montant), 0) as pub_paye,
+       -- Reste à payer
+       (ca_publicites - pub_paye) as pub_reste,
+       -- CA total du vol
+       (ca_reservations + ca_publicites) as ca_total_vol
+
+3.4.2. LA TABLE / VUE PRINCIPALE :
+   vol_programmation (table principale avec filtre WHERE YEAR() et MONTH())
+
+3.4.3. TABLES ANNEXES AVEC TYPE DE LIAISON :
+   ┌─────────────────────────┬──────────────┬────────────────────────────┐
+   │ Table Annexe            │ Type Liaison │ Colonne de Liaison         │
+   ├─────────────────────────┼──────────────┼────────────────────────────┤
+   │ vol                     │ ManyToOne    │ id_vol (FK)                │
+   │ aeroport (départ)       │ ManyToOne    │ vol.id_aeroport_depart     │
+   │ aeroport (arrivée)      │ ManyToOne    │ vol.id_aeroport_arrivee    │
+   │ reservation             │ OneToMany    │ id_vol_programmation (FK)  │
+   │ reservation_place       │ OneToMany    │ reservation.id             │
+   │ tarif_vol               │ ManyToOne    │ JOIN via type_passager     │
+   │ diffusion_programmation │ OneToMany    │ id_vol_programmation (FK)  │
+   │ diffusion               │ ManyToOne    │ diffusion_prog.id_diffusion│
+   │ tarif_pub               │ Sous-requête │ MAX(date_application)      │
+   │ payment_diffusion       │ OneToMany    │ id_diffusion_prog (FK)     │
+   │ payment_details_diff    │ OneToMany    │ payment_diffusion.id       │
+   │ vente_produit           │ Agrégation   │ Filtre mois/année séparé   │
+   │ vente_produit_detail    │ OneToMany    │ id_vente_produit (FK)      │
+   └─────────────────────────┴──────────────┴────────────────────────────┘
+
+REQUÊTE SQL POUR RAPPORT CA GLOBAL :
+────────────────────────────────────
+-- Rapport pour un mois donné (ex: Février 2026)
+SELECT 
+    -- Totaux globaux du mois
+    SUM(ca_reservations) as total_ca_reservations,
+    SUM(ca_publicites) as total_ca_publicites,
+    SUM(pub_paye) as total_pub_paye,
+    SUM(pub_reste) as total_pub_reste,
+    COUNT(DISTINCT vp.id) as nombre_vols,
+    
+    -- CA produits extras (requête séparée)
+    (SELECT SUM(vpd.quantite * vpd.prix_unitaire)
+     FROM vente_produit vp2
+     INNER JOIN vente_produit_detail vpd ON vp2.id = vpd.id_vente_produit
+     WHERE YEAR(vp2.date_vente) = ? AND MONTH(vp2.date_vente) = ?
+    ) as ca_produits_extras,
+    
+    -- CA total général
+    (total_ca_reservations + total_ca_publicites + ca_produits_extras) as ca_total_mois
+
+FROM (
+    -- Sous-requête pour chaque vol
+    SELECT 
+        vp.id,
+        vp.date_heure,
+        
+        -- CA réservations du vol
+        COALESCE(SUM(tv.tarif), 0) as ca_reservations,
+        
+        -- CA publicités du vol
+        COALESCE(SUM(dp.nombre_diffusions * tp.montant), 0) as ca_publicites,
+        
+        -- Montant payé
+        COALESCE(SUM(pdd.montant), 0) as pub_paye,
+        
+        -- Reste à payer
+        (ca_publicites - pub_paye) as pub_reste
+        
+    FROM vol_programmation vp
+    LEFT JOIN reservation r ON vp.id = r.id_vol_programmation
+    LEFT JOIN reservation_place rp ON r.id = rp.id_reservation
+    LEFT JOIN tarif_vol tv ON vp.id = tv.id_vol_programmation 
+        AND rp.id_type_passager = tv.id_type_passager
+    LEFT JOIN diffusion_programmation dp ON vp.id = dp.id_vol_programmation
+    LEFT JOIN (
+        SELECT montant FROM tarif_pub 
+        WHERE date_application <= CURRENT_DATE 
+        ORDER BY date_application DESC LIMIT 1
+    ) tp
+    LEFT JOIN payment_diffusion pd ON dp.id = pd.id_diffusion_programmation
+    LEFT JOIN payment_details_diffusion pdd ON pd.id = pdd.id_payment
+    
+    WHERE YEAR(vp.date_heure) = ?
+      AND MONTH(vp.date_heure) = ?
+    
+    GROUP BY vp.id, vp.date_heure
+) as vol_details;
+
+EXEMPLE DE RAPPORT CA GLOBAL - FÉVRIER 2026 :
+─────────────────────────────────────────────
+
+╔═══════════════════════════════════════════════════════════════════════╗
+║           RAPPORT CA GLOBAL - FÉVRIER 2026                            ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────────────────┐
+│                      RÉSUMÉ PAR VOL                                   │
+├───────────────────────────────────────────────────────────────────────┤
+│ Vol              Date       CA Réserv.  CA Pub    Payé     Reste      │
+├───────────────────────────────────────────────────────────────────────┤
+│ Tana→Nosy Be #1  05/02     172,500,000  4,000,000 4,000,000  0        │
+│ Tana→Tamatave #2 08/02     145,200,000  2,400,000 2,400,000  0        │
+│ Tana→Diego #3    12/02     98,750,000   1,600,000 1,000,000  600,000  │
+│ Nosy Be→Tana #4  15/02     168,900,000  3,200,000 2,500,000  700,000  │
+│ Tana→Majunga #5  18/02     134,600,000  2,800,000 2,000,000  800,000  │
+│ Diego→Tana #6    22/02     112,400,000  2,000,000 2,000,000  0        │
+│ Tana→Nosy Be #7  25/02     178,300,000  4,400,000 3,500,000  900,000  │
+│ Tamatave→Tana #8 28/02     156,800,000  3,600,000 2,800,000  800,000  │
+└───────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────────────┐
+│                      TOTAUX DU MOIS                                   │
+├───────────────────────────────────────────────────────────────────────┤
+│ Nombre de vols                      : 8 vols                          │
+│                                                                        │
+│ 1. CA RÉSERVATIONS                  : 1,167,450,000 Ar               │
+│ 2. CA PUBLICITÉS (à facturer)       :    24,000,000 Ar               │
+│    • Montant déjà payé              :    20,200,000 Ar (84.2%)       │
+│    • Reste à payer                  :     3,800,000 Ar (15.8%)       │
+│ 3. CA PRODUITS EXTRAS               :    28,350,000 Ar               │
+│                                                                        │
+│ ═══════════════════════════════════════════════════════════════       │
+│ CHIFFRE D'AFFAIRES TOTAL FÉVRIER    : 1,219,800,000 Ar               │
+│ ═══════════════════════════════════════════════════════════════       │
+└───────────────────────────────────────────────────────────────────────┘
+
+DÉTAIL DES PUBLICITÉS PAR SOCIÉTÉ :
+───────────────────────────────────
+┌───────────────────────────────────────────────────────────────┐
+│ Société      │ Nb Diff │ Montant Dû │ Payé      │ Reste      │
+├───────────────────────────────────────────────────────────────┤
+│ Coca-Cola    │ 25      │ 10,000,000 │ 8,500,000 │ 1,500,000  │
+│ Nike         │ 18      │  7,200,000 │ 6,200,000 │ 1,000,000  │
+│ Samsung      │ 12      │  4,800,000 │ 3,800,000 │ 1,000,000  │
+│ Orange       │ 5       │  2,000,000 │ 1,700,000 │   300,000  │
+└───────────────────────────────────────────────────────────────┘
+
+RÉPARTITION DU CA :
+──────────────────
+Réservations :  95.7%  ████████████████████████████████████████
+Publicités   :   2.0%  ██
+Produits     :   2.3%  ██
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    RÉSUMÉ DES FONCTIONS PRINCIPALES
+═══════════════════════════════════════════════════════════════════════════════
+
+1. VolController.findAll() 
+   → Recherche vols par aéroports (Tana, Nosy Be)
+
+2. ReservationController.createForm() & save()
+   → Création réservation avec sélection places et types passagers
+
+3. ClassePlaceRestController.getClassesForAvion()
+   → Configuration classes par avion (Première, Premium, Éco)
+
+4. TarifVolService.getTarifByVolClasseAndType()
+   → Récupération prix selon classe + type passager
+
+5. RemiseTarifService.calculateTarifWithRemise()
+   → Application remises (Enfant -30%, Bébé -400€)
+
+6. TarifPubController.getCurrentTarif()
+   → Tarif actuel publicité (400,000 Ar)
+
+7. DiffusionProgrammationService.calculateMontantDiffusion()
+   → Calcul montant pub = nb_diffusions × tarif
+
+8. PaymentDiffusionService.addPayment()
+   → Enregistrement paiement partiel/total
+
+9. VenteProduitService.createVente()
+   → Création vente produits extras pour client
+
+10. VolProgrammationService.calculateRevenue()
+    → CA total réservations d'un vol
+
+11. VolProgrammationController.revenusDetails()
+    → Affichage détaillé CA d'un vol avec décomposition
+
+12. PaymentDetailsDiffusionService.getTotalPaye()
+    → Calcul montants payés et restants
+
+13. VolProgrammationController.rapportCAGlobal()
+    → Génération rapport CA mensuel global pour tous les vols
+
+14. ProduitExtraService.calculateMonthlyExtraRevenue()
+    → Calcul CA produits extras pour un mois donné
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                                FIN DU DOCUMENT
+═══════════════════════════════════════════════════════════════════════════════

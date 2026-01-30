@@ -1,0 +1,1942 @@
+═══════════════════════════════════════════════════════════════════════════════
+          ANALYSE COMPLÈTE DU PROJET - COMPAGNIE AÉRIENNE
+═══════════════════════════════════════════════════════════════════════════════
+
+Durée: 2h
+
+═══════════════════════════════════════════════════════════════════════════════
+1. MCD COMPLET (Modèle Conceptuel de Données)
+═══════════════════════════════════════════════════════════════════════════════
+
+ENTITÉS PRINCIPALES ET LEURS RELATIONS :
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        MODULE GESTION DES VOLS                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+AEROPORT (0,N)────────crée────────>(1,1) VOL <────────arrivée─────(0,N) AEROPORT
+    |                                 |
+    id (PK)                           id (PK)
+    nom                               id_aeroport_depart (FK)
+                                      id_aeroport_arrivee (FK)
+                                      duree
+                                      |
+                                      | (1,1)
+                                      |
+                                      ↓ programme (0,N)
+                                 VOL_PROGRAMMATION
+                                      |
+                                      id (PK)
+                                      id_vol (FK)
+                                      id_avion (FK)
+                                      date_heure
+                                      |
+                    ┌─────────────────┼─────────────────┐
+                    |                 |                 |
+              (1,1) |           (1,1) |           (0,N) |
+                    ↓                 ↓                 ↓
+        VOL_PROGRAMMATION_STATUT   TARIF_VOL      RESERVATION
+                    |                 |                 |
+              id (PK)           id (PK)           id (PK)
+              id_vol_programmation  id_vol_programmation  id_vol_programmation (FK)
+              id_statut (FK)        id_classe (FK)        id_client (FK)
+              date                  id_type_passager (FK) nombre_places
+                    |               tarif                 |
+                    |                                     | (1,N)
+                    ↓ (0,N)                               ↓
+              STATUT_VOL                          RESERVATION_PLACE
+                    |                                     |
+              id (PK)                               id_reservation (FK)
+              nom                                   place
+                                                    id_type_passager (FK)
+                                                          |
+                                                          | (0,N)
+                                                          ↓ (1,1)
+                                                    TYPE_PASSAGER
+                                                          |
+                                                    id (PK)
+                                                    nom
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    MODULE GESTION DES AVIONS ET PILOTES                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+AVION                                              PILOTE
+  |                                                   |
+  id (PK)                                             id (PK)
+  matricule                                           nom
+  capacite                                            prenom
+  |                                                   |
+  └─────────────(N,N)────AVION_PILOTE────(N,N)───────┘
+                              |
+                        id_avion (FK, PK)
+                        id_pilote (FK, PK)
+                        date (PK)
+
+AVION (1,1)────────définit────────>(0,N) CLASSE_PLACE <────(1,1)──── CLASSE
+  |                                         |                           |
+  |                                   id_classe (FK, PK)          id (PK)
+  |                                   id_avion (FK, PK)           nom
+  |                                   place_debut
+  |                                   place_fin
+  |
+  └──────(1,1)──affecté à──>(0,N) VOL_PROGRAMMATION
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        MODULE GESTION DES CLIENTS                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+CLIENT                                      STATUT_RESERVATION
+  |                                               |
+  id (PK)                                   id (PK)
+  nom                                       nom
+  prenom                                      |
+  email                                       | (0,N)
+  telephone                                   |
+  |                                           ↓ (1,1)
+  | (1,1)                          HISTORIQUE_RESERVATION
+  |                                           |
+  ↓ réserve (0,N)                       id (PK)
+RESERVATION ────────────────────────────> id_reservation (FK)
+                                          id_statut (FK)
+                                          date
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        MODULE GESTION DES TARIFS                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+TARIF_VOL                               REMISE_TARIF
+  |                                           |
+  id (PK)                                     id (PK)
+  id_vol_programmation (FK)                   remise
+  id_classe (FK)                              formule (% ou -)
+  id_type_passager (FK)                       id_type_passager_appliquer (FK)
+  tarif                                       id_type_passager_reference (FK)
+                                              id_classe (FK)
+                                              id_vol_programmation (FK)
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    MODULE GESTION DES PRODUITS EXTRAS                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+PRODUIT_EXTRA                           CLIENT
+      |                                   |
+      id (PK)                             |
+      nom                                 | (1,1)
+      |                                   |
+      | (1,1)                             ↓ achète (0,N)
+      |                             VENTE_PRODUIT
+      ↓ possède (0,N)                     |
+TARIF_PRODUIT_EXTRA               id (PK)
+      |                           id_client (FK)
+      id (PK)                     date_vente
+      id_produit_extra (FK)             |
+      prix                              | (1,1)
+      date_application                  |
+                                        ↓ contient (1,N)
+                                  VENTE_PRODUIT_DETAIL
+                                        |
+                                  id (PK)
+                                  id_vente_produit (FK)
+                                  id_produit_extra (FK)
+                                  quantite
+                                  prix_unitaire
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                MODULE GESTION DES PUBLICITÉS ET DIFFUSIONS                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+SOCIETE                                 TARIF_PUB
+  |                                       |
+  id (PK)                                 id (PK)
+  nom                                     montant
+  |                                       date_application
+  | (1,1)
+  |
+  ↓ possède (0,N)
+DIFFUSION
+  |
+  id (PK)
+  nom
+  id_societe (FK)
+  |
+  | (1,1)
+  |
+  ↓ programme (0,N)
+DIFFUSION_PROGRAMMATION
+  |
+  id (PK)
+  id_diffusion (FK)
+  id_vol_programmation (FK) ────────> VOL_PROGRAMMATION
+  nombre_diffusions
+  date_programmation
+  |
+  | (1,1)
+  |
+  ↓ génère (0,N)
+PAYMENT_DIFFUSION
+  |
+  id (PK)
+  id_societe (FK)
+  id_diffusion_programmation (FK)
+  |
+  | (1,1)
+  |
+  ↓ détaille (1,N)
+PAYMENT_DETAILS_DIFFUSION
+  |
+  id (PK)
+  id_payment (FK)
+  date_payment
+  montant
+
+
+═══════════════════════════════════════════════════════════════════════════════
+2. LISTE DES CLASSES COMPLÈTES (sans attributs)
+═══════════════════════════════════════════════════════════════════════════════
+
+ENTITÉS (29 classes) :
+
+1.  Aeroport
+2.  Avion
+3.  AvionPilote
+4.  AvionPiloteId
+5.  Classe
+6.  ClassePlace
+7.  Client
+8.  Diffusion
+9.  DiffusionProgrammation
+10. HistoriqueReservation
+11. PaymentDetailsDiffusion
+12. PaymentDiffusion
+13. Pilote
+14. ProduitExtra
+15. RemiseTarif
+16. Reservation
+17. ReservationPlace
+18. Societe
+19. StatutReservation
+20. StatutVol
+21. TarifProduitExtra
+22. TarifPub
+23. TarifVol
+24. TypePassager
+25. VenteProduit
+26. VenteProduitDetail
+27. Vol
+28. VolProgrammation
+29. VolProgrammationStatut
+
+
+REPOSITORIES (22 classes) :
+
+1.  AeroportRepository
+2.  AvionPiloteRepository
+3.  AvionRepository
+4.  ClassePlaceRepository
+5.  ClasseRepository
+6.  ClientRepository
+7.  DiffusionProgrammationRepository
+8.  DiffusionRepository
+9.  HistoriqueReservationRepository
+10. PaymentDetailsDiffusionRepository
+11. PaymentDiffusionRepository
+12. PiloteRepository
+13. ProduitExtraRepository
+14. RemiseTarifRepository
+15. ReservationRepository
+16. SocieteRepository
+17. StatutReservationRepository
+18. StatutVolRepository
+19. TarifProduitExtraRepository
+20. TarifPubRepository
+21. TarifVolRepository
+22. TypePassagerRepository
+23. VenteProduitDetailRepository
+24. VenteProduitRepository
+25. VolProgrammationRepository
+26. VolProgrammationStatutRepository
+27. VolRepository
+
+
+SERVICES (même structure que repositories avec logique métier)
+
+CONTROLLERS (22 classes) :
+
+1.  AeroportController
+2.  AvionController
+3.  ClasseController
+4.  ClassePlaceRestController
+5.  ClientController
+6.  DiffusionController
+7.  HistoriqueReservationController
+8.  HomeController
+9.  PiloteController
+10. ProduitExtraController
+11. PubliciteController
+12. RemiseTarifRestController
+13. ReservationController
+14. SocieteController
+15. StatutReservationController
+16. StatutVolController
+17. TarifPubController
+18. TypePassagerController
+19. VolController
+20. VolProgrammationController
+21. VolProgrammationStatutController
+22. VolRestController
+
+
+═══════════════════════════════════════════════════════════════════════════════
+3. FONCTIONNALITÉS DÉTAILLÉES
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 1 : GESTION DES AÉROPORTS                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Aéroports | Vols | Avions | ... ]            │
+├────────────────────────────────────────────────────────────────┤
+│                    LISTE DES AÉROPORTS                         │
+│                                                                │
+│ [+ Nouvel Aéroport]                    [Rechercher: ______]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom de l'Aéroport      │ Actions                   │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Paris CDG              │ [Modifier] [Supprimer]    │  │
+│ │ 2  │ New York JFK           │ [Modifier] [Supprimer]    │  │
+│ │ 3  │ Tokyo Narita           │ [Modifier] [Supprimer]    │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: AeroportController
+   - Fonctions:
+     • List<Aeroport> findAll(String nom, Model model)
+       └─> Location: AeroportController (ligne ~18)
+     
+     • String createForm(Model model)
+       └─> Location: AeroportController (ligne ~34)
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: AeroportController (ligne ~41)
+     
+     • String save(Aeroport entity)
+       └─> Location: AeroportController (ligne ~48)
+     
+     • String deleteById(Integer id)
+       └─> Location: AeroportController (ligne ~54)
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: aeroport
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom
+   3.4.2. Table principale: aeroport
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 2 : GESTION DES VOLS                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Aéroports | Vols | Avions | ... ]            │
+├────────────────────────────────────────────────────────────────┤
+│                      LISTE DES VOLS                            │
+│                                                                │
+│ [+ Nouveau Vol]                                                │
+│                                                                │
+│ Filtres:                                                       │
+│ Départ: [_____________]  Arrivée: [_____________] [Filtrer]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Départ     │ Arrivée    │ Durée │ Actions          │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Paris CDG  │ NY JFK     │ 8.5h  │ [Détails] [Modif]│  │
+│ │ 2  │ Tokyo      │ Paris CDG  │ 12.0h │ [Détails] [Modif]│  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VolController
+   - Fonctions:
+     • List<Vol> findAll(String depart, String arrivee, Model model)
+       └─> Location: VolController (ligne ~22)
+     
+     • String createForm(Model model)
+       └─> Location: VolController (ligne ~45)
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: VolController (ligne ~53)
+     
+     • String save(Vol entity)
+       └─> Location: VolController (ligne ~61)
+     
+     • String disponibilites(Model model)
+       └─> Location: VolController (ligne ~67)
+     
+     • String deleteById(Integer id)
+       └─> Location: VolController (ligne ~74)
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: vol
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_aeroport_depart, id_aeroport_arrivee, duree
+   3.4.2. Table principale: vol
+   3.4.3. Tables annexes: 
+          - aeroport (id_aeroport_depart) → type: ManyToOne (FK)
+          - aeroport (id_aeroport_arrivee) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 3 : PROGRAMMATION DES VOLS                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Aéroports | Vols | Programmations | ... ]    │
+├────────────────────────────────────────────────────────────────┤
+│                PROGRAMMATION DES VOLS                          │
+│                                                                │
+│ [+ Nouvelle Programmation]                                     │
+│                                                                │
+│ Filtres:                                                       │
+│ Départ: [_____________]  Arrivée: [_____________] [Filtrer]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Vol │ Route       │ Date/Heure  │ Avion  │ Statut │ CA   │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ #1  │ PAR→NYC     │ 15/02 10:00 │ A380   │ Prévu  │ 45k€ │  │
+│ │ #2  │ TOK→PAR     │ 16/02 14:30 │ B777   │ Confirmé│38k€ │  │
+│ │     │             │             │        │ [Actions...]   │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VolProgrammationController
+   - Fonctions:
+     • List<VolProgrammation> list(String depart, String arrivee, Model model)
+       └─> Location: VolProgrammationController (ligne ~67)
+     
+     • String rapportCaGlobal(Integer mois, Integer annee, Model model)
+       └─> Location: VolProgrammationController (ligne ~107)
+     
+     • String rapportMensuel(Integer annee, Model model)
+       └─> Location: VolProgrammationController (ligne ~158)
+     
+     • String revenusDetails(Integer id, Model model)
+       └─> Location: VolProgrammationController (ligne ~210)
+     
+     • String details(Integer id, Model model)
+       └─> Location: VolProgrammationController (ligne ~236)
+     
+     • String createForm(Model model)
+       └─> Location: VolProgrammationController (ligne ~343)
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: VolProgrammationController (ligne ~355)
+     
+     • String save(VolProgrammation volProgrammation, ...)
+       └─> Location: VolProgrammationController (ligne ~387)
+     
+     • String deleteById(Integer id)
+       └─> Location: VolProgrammationController (ligne ~459)
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: vol_programmation
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_vol, id_avion, date_heure
+   3.4.2. Table principale: vol_programmation
+   3.4.3. Tables annexes:
+          - vol (id_vol) → type: ManyToOne (FK)
+          - avion (id_avion) → type: ManyToOne (FK)
+          - vol_programmation_statut → type: OneToMany
+          - reservation → type: OneToMany
+          - tarif_vol → type: OneToMany
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 4 : GESTION DES RÉSERVATIONS                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Réservations | Clients | Vols | ... ]        │
+├────────────────────────────────────────────────────────────────┤
+│                  GESTION DES RÉSERVATIONS                      │
+│                                                                │
+│ [+ Nouvelle Réservation]                                       │
+│                                                                │
+│ Filtres:                                                       │
+│ Client: [_____________]  Vol: [_____________] [Rechercher]    │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Client      │ Vol        │ Places │ Statut │ Actions│  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Dupont J.   │ PAR→NYC #1 │ 2      │ Confirmé│[Détails]│
+│ │ 2  │ Martin L.   │ TOK→PAR #2 │ 1      │ En attente│[Modif]│
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ FORMULAIRE DE RÉSERVATION:                                     │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Vol: [Sélectionner vol ▼]                                │  │
+│ │ Client: [Sélectionner client ▼]                          │  │
+│ │ Nombre de places: [__]                                   │  │
+│ │                                                           │  │
+│ │ Sélection des places:                                    │  │
+│ │ Classe Économique: ☐1 ☐2 ☐3 ... ☐50                    │  │
+│ │ Classe Business: ☐51 ☐52 ... ☐70                       │  │
+│ │                                                           │  │
+│ │ Type de passager pour chaque place:                     │  │
+│ │ Place 1: [Adulte ▼]  Place 2: [Enfant ▼]               │  │
+│ │                                                           │  │
+│ │ [Valider] [Annuler]                                      │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: ReservationController
+   - Fonctions:
+     • List<Reservation> findAll(String client, String vol, Model model)
+       └─> Location: ReservationController (ligne ~30)
+     
+     • String createForm(Integer volId, Integer volProgrammationId, Model model)
+       └─> Location: ReservationController (ligne ~60)
+     
+     • String save(Reservation entity)
+       └─> Location: ReservationController (ligne ~85)
+     
+     • Reservation findById(Integer id, Model model)
+       └─> Location: ReservationController (ligne ~91)
+     
+     • String deleteById(Integer id)
+       └─> Location: ReservationController (ligne ~97)
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: reservation
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_vol_programmation, id_client, nombre_places
+   3.4.2. Table principale: reservation
+   3.4.3. Tables annexes:
+          - vol_programmation (id_vol_programmation) → type: ManyToOne (FK)
+          - client (id_client) → type: ManyToOne (FK)
+          - reservation_place → type: ElementCollection (embedded)
+          - historique_reservation → type: OneToMany
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 5 : GESTION DES AVIONS                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Avions | Pilotes | Affectations | ... ]      │
+├────────────────────────────────────────────────────────────────┤
+│                     GESTION DES AVIONS                         │
+│                                                                │
+│ [+ Nouvel Avion]                     [Rechercher: ________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Matricule   │ Capacité │ Actions                    │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ F-HPJA      │ 350      │ [Modifier] [Supprimer]     │  │
+│ │ 2  │ F-GSQK      │ 280      │ [Modifier] [Supprimer]     │  │
+│ │ 3  │ F-GZNP      │ 420      │ [Modifier] [Supprimer]     │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: AvionController
+   - Fonctions:
+     • List<Avion> findAll(String matricule, Model model)
+       └─> Location: AvionController (ligne ~18)
+     
+     • String createForm(Model model)
+       └─> Location: AvionController (ligne ~34)
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: AvionController (ligne ~41)
+     
+     • String save(Avion entity)
+       └─> Location: AvionController (ligne ~48)
+     
+     • String deleteById(Integer id)
+       └─> Location: AvionController (ligne ~54)
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: avion
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, matricule, capacite
+   3.4.2. Table principale: avion
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 6 : GESTION DES PILOTES                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Avions | Pilotes | Affectations | ... ]      │
+├────────────────────────────────────────────────────────────────┤
+│                    GESTION DES PILOTES                         │
+│                                                                │
+│ [+ Nouveau Pilote]                  [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom         │ Prénom      │ Actions                 │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Dubois      │ Pierre      │ [Modifier] [Supprimer]  │  │
+│ │ 2  │ Moreau      │ Sophie      │ [Modifier] [Supprimer]  │  │
+│ │ 3  │ Laurent     │ Thomas      │ [Modifier] [Supprimer]  │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: PiloteController
+   - Fonctions:
+     • List<Pilote> findAll(String nom, Model model)
+       └─> Location: PiloteController
+     
+     • String createForm(Model model)
+       └─> Location: PiloteController
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: PiloteController
+     
+     • String save(Pilote entity)
+       └─> Location: PiloteController
+     
+     • String deleteById(Integer id)
+       └─> Location: PiloteController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: pilote
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom, prenom
+   3.4.2. Table principale: pilote
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 7 : AFFECTATION PILOTE-AVION                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Avions | Pilotes | Affectations | ... ]      │
+├────────────────────────────────────────────────────────────────┤
+│              AFFECTATION PILOTE - AVION                        │
+│                                                                │
+│ [+ Nouvelle Affectation]                                       │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Avion      │ Pilote         │ Date       │ Actions       │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ F-HPJA     │ Dubois Pierre  │ 15/02/2026 │ [Supprimer]   │  │
+│ │ F-GSQK     │ Moreau Sophie  │ 15/02/2026 │ [Supprimer]   │  │
+│ │ F-GZNP     │ Laurent Thomas │ 16/02/2026 │ [Supprimer]   │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: AvionPiloteController (implicite via services)
+   - Fonctions (dans services):
+     • List<AvionPilote> findAll()
+     • void save(AvionPilote entity)
+     • void deleteById(AvionPiloteId id)
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: avion_pilote
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id_avion, id_pilote, date
+   3.4.2. Table principale: avion_pilote
+   3.4.3. Tables annexes:
+          - avion (id_avion) → type: ManyToOne (PK composite)
+          - pilote (id_pilote) → type: ManyToOne (PK composite)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 8 : GESTION DES CLASSES                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Classes | Avions | Configuration | ... ]     │
+├────────────────────────────────────────────────────────────────┤
+│                   GESTION DES CLASSES                          │
+│                                                                │
+│ [+ Nouvelle Classe]                 [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom de la Classe │ Actions                          │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Économique       │ [Modifier] [Supprimer]           │  │
+│ │ 2  │ Business         │ [Modifier] [Supprimer]           │  │
+│ │ 3  │ Première Classe  │ [Modifier] [Supprimer]           │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: ClasseController
+   - Fonctions:
+     • List<Classe> findAll(String nom, Model model)
+       └─> Location: ClasseController
+     
+     • String createForm(Model model)
+       └─> Location: ClasseController
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: ClasseController
+     
+     • String save(Classe entity)
+       └─> Location: ClasseController
+     
+     • String deleteById(Integer id)
+       └─> Location: ClasseController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: classe
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom
+   3.4.2. Table principale: classe
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 9 : CONFIGURATION CLASSE-PLACE PAR AVION                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Classes | Avions | Configuration | ... ]     │
+├────────────────────────────────────────────────────────────────┤
+│            CONFIGURATION DES PLACES PAR CLASSE                 │
+│                                                                │
+│ Sélectionner un avion: [F-HPJA - A380 ▼]                     │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Classe         │ Place Début │ Place Fin │ Actions       │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Première       │ 1           │ 20        │ [Modifier]    │  │
+│ │ Business       │ 21          │ 80        │ [Modifier]    │  │
+│ │ Économique     │ 81          │ 350       │ [Modifier]    │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ [+ Ajouter une configuration]                                 │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: ClassePlaceRestController
+   - Fonctions:
+     • List<ClassePlace> getClassesForAvion(Integer avionId)
+       └─> Location: ClassePlaceRestController (API REST)
+     
+     • ClassePlace save(ClassePlace entity)
+       └─> Location: ClassePlaceRestController
+     
+     • void deleteById(ClassePlaceId id)
+       └─> Location: ClassePlaceRestController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: classe_place
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id_classe, id_avion, place_debut, place_fin
+   3.4.2. Table principale: classe_place
+   3.4.3. Tables annexes:
+          - classe (id_classe) → type: ManyToOne (PK composite)
+          - avion (id_avion) → type: ManyToOne (PK composite)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 10 : GESTION DES CLIENTS                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Clients | Réservations | ... ]               │
+├────────────────────────────────────────────────────────────────┤
+│                    GESTION DES CLIENTS                         │
+│                                                                │
+│ [+ Nouveau Client]                  [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom    │ Prénom │ Email          │ Tél    │ Actions │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Dupont │ Jean   │ j.dupont@...   │ 0601.. │ [Modif] │  │
+│ │ 2  │ Martin │ Lucie  │ l.martin@...   │ 0612.. │ [Modif] │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: ClientController
+   - Fonctions:
+     • List<Client> findAll(String nom, Model model)
+       └─> Location: ClientController
+     
+     • String createForm(Model model)
+       └─> Location: ClientController
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: ClientController
+     
+     • String save(Client entity)
+       └─> Location: ClientController
+     
+     • String deleteById(Integer id)
+       └─> Location: ClientController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: client
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom, prenom, email, telephone
+   3.4.2. Table principale: client
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 11 : GESTION DES TYPES DE PASSAGERS                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Configuration | Types Passagers | ... ]      │
+├────────────────────────────────────────────────────────────────┤
+│                 GESTION DES TYPES DE PASSAGERS                 │
+│                                                                │
+│ [+ Nouveau Type]                    [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom du Type      │ Actions                          │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Adulte           │ [Modifier] [Supprimer]           │  │
+│ │ 2  │ Enfant           │ [Modifier] [Supprimer]           │  │
+│ │ 3  │ Bébé             │ [Modifier] [Supprimer]           │  │
+│ │ 4  │ Senior           │ [Modifier] [Supprimer]           │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: TypePassagerController
+   - Fonctions:
+     • List<TypePassager> findAll(Model model)
+       └─> Location: TypePassagerController (ligne ~17)
+     
+     • String createForm(Model model)
+       └─> Location: TypePassagerController (ligne ~24)
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: TypePassagerController (ligne ~31)
+     
+     • String save(TypePassager entity)
+       └─> Location: TypePassagerController
+     
+     • String deleteById(Integer id)
+       └─> Location: TypePassagerController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: type_passager
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom
+   3.4.2. Table principale: type_passager
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 12 : GESTION DES TARIFS PAR VOL                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Tarifs | Vols | ... ]                        │
+├────────────────────────────────────────────────────────────────┤
+│              GESTION DES TARIFS PAR VOL                        │
+│                                                                │
+│ Vol programmé: [PAR→NYC 15/02 10:00 ▼]                       │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Classe      │ Type Passager │ Tarif (€) │ Actions       │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Économique  │ Adulte        │ 450.00    │ [Modifier]    │  │
+│ │ Économique  │ Enfant        │ 300.00    │ [Modifier]    │  │
+│ │ Business    │ Adulte        │ 1200.00   │ [Modifier]    │  │
+│ │ Business    │ Enfant        │ 900.00    │ [Modifier]    │  │
+│ │ Première    │ Adulte        │ 2500.00   │ [Modifier]    │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ [+ Ajouter un tarif]                                          │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: TarifVolService (via VolProgrammationController)
+   - Fonctions:
+     • List<TarifVol> findByVolProgrammation(Integer volProgId)
+       └─> Location: Dans VolProgrammationController (ligne ~236+)
+     
+     • TarifVol save(TarifVol entity)
+       └─> Location: TarifVolService
+     
+     • void deleteById(Integer id)
+       └─> Location: TarifVolService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: tarif_vol
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_vol_programmation, id_classe, id_type_passager, tarif
+   3.4.2. Table principale: tarif_vol
+   3.4.3. Tables annexes:
+          - vol_programmation (id_vol_programmation) → type: ManyToOne (FK)
+          - classe (id_classe) → type: ManyToOne (FK)
+          - type_passager (id_type_passager) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 13 : GESTION DES REMISES TARIFAIRES                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Tarifs | Remises | ... ]                     │
+├────────────────────────────────────────────────────────────────┤
+│              GESTION DES REMISES TARIFAIRES                    │
+│                                                                │
+│ [+ Nouvelle Remise]                                            │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Vol/Classe │ Type Appliqué │ Référence │ Remise │ Actions │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Éco #1     │ Enfant        │ Adulte    │ -30%   │ [Modif] │  │
+│ │ Bus #2     │ Bébé          │ Adulte    │ -50€   │ [Modif] │  │
+│ │ 1ère #3    │ Senior        │ Adulte    │ -15%   │ [Modif] │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: RemiseTarifRestController
+   - Fonctions:
+     • List<RemiseTarif> findAll()
+       └─> Location: RemiseTarifRestController (API REST)
+     
+     • RemiseTarif save(RemiseTarif entity)
+       └─> Location: RemiseTarifRestController
+     
+     • void deleteById(Integer id)
+       └─> Location: RemiseTarifRestController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: remise_tarif
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, remise, formule, id_type_passager_appliquer, 
+                    id_type_passager_reference, id_classe, id_vol_programmation
+   3.4.2. Table principale: remise_tarif
+   3.4.3. Tables annexes:
+          - type_passager (id_type_passager_appliquer) → type: ManyToOne (FK)
+          - type_passager (id_type_passager_reference) → type: ManyToOne (FK)
+          - classe (id_classe) → type: ManyToOne (FK)
+          - vol_programmation (id_vol_programmation) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 14 : GESTION DES STATUTS DE VOL                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Vols | Statuts | ... ]                       │
+├────────────────────────────────────────────────────────────────┤
+│                GESTION DES STATUTS DE VOL                      │
+│                                                                │
+│ [+ Nouveau Statut]                  [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom du Statut     │ Actions                         │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Prévu             │ [Modifier] [Supprimer]          │  │
+│ │ 2  │ Confirmé          │ [Modifier] [Supprimer]          │  │
+│ │ 3  │ En cours          │ [Modifier] [Supprimer]          │  │
+│ │ 4  │ Atterri           │ [Modifier] [Supprimer]          │  │
+│ │ 5  │ Annulé            │ [Modifier] [Supprimer]          │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: StatutVolController
+   - Fonctions:
+     • List<StatutVol> findAll(String nom, Model model)
+       └─> Location: StatutVolController
+     
+     • String createForm(Model model)
+       └─> Location: StatutVolController
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: StatutVolController
+     
+     • String save(StatutVol entity)
+       └─> Location: StatutVolController
+     
+     • String deleteById(Integer id)
+       └─> Location: StatutVolController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: statut_vol
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom
+   3.4.2. Table principale: statut_vol
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 15 : HISTORIQUE DES STATUTS DE VOL PROGRAMMÉ                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Vols | Programmations | Historique | ... ]   │
+├────────────────────────────────────────────────────────────────┤
+│          HISTORIQUE DES STATUTS - Vol PAR→NYC #1               │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Date/Heure       │ Statut        │ Modifié par           │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 01/01 08:00      │ Prévu         │ Système               │  │
+│ │ 10/01 14:30      │ Confirmé      │ Admin                 │  │
+│ │ 15/01 09:45      │ En cours      │ Système automatique   │  │
+│ │ 15/01 18:20      │ Atterri       │ Système automatique   │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ Changer le statut: [Sélectionner ▼] [Mettre à jour]          │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VolProgrammationStatutController
+   - Fonctions:
+     • List<VolProgrammationStatut> findByVolProgrammation(Integer id)
+       └─> Location: VolProgrammationStatutService
+     
+     • String updateStatut(Integer volProgId, Integer statutId)
+       └─> Location: VolProgrammationStatutController (ligne ~26)
+     
+     • VolProgrammationStatut save(VolProgrammationStatut entity)
+       └─> Location: VolProgrammationStatutService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: vol_programmation_statut
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_vol_programmation, id_statut, date
+   3.4.2. Table principale: vol_programmation_statut
+   3.4.3. Tables annexes:
+          - vol_programmation (id_vol_programmation) → type: ManyToOne (FK)
+          - statut_vol (id_statut) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 16 : GESTION DES STATUTS DE RÉSERVATION                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Réservations | Statuts | ... ]               │
+├────────────────────────────────────────────────────────────────┤
+│            GESTION DES STATUTS DE RÉSERVATION                  │
+│                                                                │
+│ [+ Nouveau Statut]                  [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom du Statut     │ Actions                         │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ En attente        │ [Modifier] [Supprimer]          │  │
+│ │ 2  │ Confirmée         │ [Modifier] [Supprimer]          │  │
+│ │ 3  │ Payée             │ [Modifier] [Supprimer]          │  │
+│ │ 4  │ Annulée           │ [Modifier] [Supprimer]          │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: StatutReservationController
+   - Fonctions:
+     • List<StatutReservation> findAll(String nom, Model model)
+       └─> Location: StatutReservationController
+     
+     • String createForm(Model model)
+       └─> Location: StatutReservationController
+     
+     • String save(StatutReservation entity)
+       └─> Location: StatutReservationController
+     
+     • String deleteById(Integer id)
+       └─> Location: StatutReservationController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: statut_reservation
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom
+   3.4.2. Table principale: statut_reservation
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 17 : HISTORIQUE DES RÉSERVATIONS                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Réservations | Historique | ... ]            │
+├────────────────────────────────────────────────────────────────┤
+│         HISTORIQUE DE LA RÉSERVATION #125                      │
+│         Client: Dupont Jean - Vol: PAR→NYC                     │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Date/Heure       │ Statut        │ Remarque              │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 05/01 10:15      │ En attente    │ Réservation créée     │  │
+│ │ 05/01 10:30      │ Confirmée     │ Places attribuées     │  │
+│ │ 06/01 14:20      │ Payée         │ Paiement CB validé    │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: HistoriqueReservationController
+   - Fonctions:
+     • List<HistoriqueReservation> findByReservation(Integer reservationId)
+       └─> Location: HistoriqueReservationController
+     
+     • HistoriqueReservation save(HistoriqueReservation entity)
+       └─> Location: HistoriqueReservationController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: historique_reservation
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_reservation, id_statut, date
+   3.4.2. Table principale: historique_reservation
+   3.4.3. Tables annexes:
+          - reservation (id_reservation) → type: ManyToOne (FK)
+          - statut_reservation (id_statut) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 18 : GESTION DES PRODUITS EXTRAS                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Produits | Ventes | ... ]                    │
+├────────────────────────────────────────────────────────────────┤
+│               GESTION DES PRODUITS EXTRAS                      │
+│                                                                │
+│ [+ Nouveau Produit]                 [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom du Produit    │ Prix actuel │ Actions          │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Repas chaud       │ 15.00€      │ [Modif] [Tarifs] │  │
+│ │ 2  │ Boisson alcoolisée│ 8.00€       │ [Modif] [Tarifs] │  │
+│ │ 3  │ Couverture        │ 5.00€       │ [Modif] [Tarifs] │  │
+│ │ 4  │ Kit voyage        │ 12.00€      │ [Modif] [Tarifs] │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: ProduitExtraController
+   - Fonctions:
+     • List<ProduitExtra> findAll(String nom, Model model)
+       └─> Location: ProduitExtraController
+     
+     • String createForm(Model model)
+       └─> Location: ProduitExtraController
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: ProduitExtraController
+     
+     • String save(ProduitExtra entity)
+       └─> Location: ProduitExtraController
+     
+     • String deleteById(Integer id)
+       └─> Location: ProduitExtraController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: produit_extra
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom
+   3.4.2. Table principale: produit_extra
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 19 : HISTORIQUE DES TARIFS PRODUITS EXTRAS                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Produits | Tarifs | ... ]                    │
+├────────────────────────────────────────────────────────────────┤
+│         HISTORIQUE DES TARIFS - Repas chaud                    │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Date application │ Prix (€)  │ Statut   │ Actions        │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 01/01/2026       │ 12.00     │ Archivé  │ [Voir]         │  │
+│ │ 15/01/2026       │ 13.50     │ Archivé  │ [Voir]         │  │
+│ │ 01/02/2026       │ 15.00     │ Actif    │ [Modifier]     │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ [+ Nouveau tarif]                                             │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: TarifProduitExtraService (via ProduitExtraController)
+   - Fonctions:
+     • List<TarifProduitExtra> findByProduit(Integer produitId)
+       └─> Location: TarifProduitExtraService
+     
+     • TarifProduitExtra save(TarifProduitExtra entity)
+       └─> Location: TarifProduitExtraService
+     
+     • TarifProduitExtra getCurrentTarif(Integer produitId)
+       └─> Location: TarifProduitExtraService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: tarif_produit_extra
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_produit_extra, prix, date_application
+   3.4.2. Table principale: tarif_produit_extra
+   3.4.3. Tables annexes:
+          - produit_extra (id_produit_extra) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 20 : VENTE DE PRODUITS EXTRAS                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Produits | Ventes | ... ]                    │
+├────────────────────────────────────────────────────────────────┤
+│                  VENTE DE PRODUITS EXTRAS                      │
+│                                                                │
+│ Client: [Dupont Jean ▼]                                       │
+│ Date: [30/01/2026 10:30]                                      │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Produit           │ Prix unitaire │ Qté │ Total         │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Repas chaud       │ 15.00€       │ [2] │ 30.00€        │  │
+│ │ Boisson alcoolisée│ 8.00€        │ [1] │ 8.00€         │  │
+│ │                   │              │     │               │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ [+ Ajouter un produit]                                        │
+│                                                                │
+│ TOTAL: 38.00€                                                 │
+│                                                                │
+│ [Valider la vente] [Annuler]                                  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VenteProduitService
+   - Fonctions:
+     • VenteProduit createVente(Integer clientId, List<VenteProduitDetail> details)
+       └─> Location: VenteProduitService
+     
+     • List<VenteProduit> findByClient(Integer clientId)
+       └─> Location: VenteProduitService
+     
+     • VenteProduit save(VenteProduit vente)
+       └─> Location: VenteProduitService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables principales: vente_produit, vente_produit_detail
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes principales:
+          vente_produit: id, id_client, date_vente
+          vente_produit_detail: id, id_vente_produit, id_produit_extra, 
+                                quantite, prix_unitaire
+   3.4.2. Tables principales: vente_produit (master), vente_produit_detail (detail)
+   3.4.3. Tables annexes:
+          - client (id_client) → type: ManyToOne (FK) dans vente_produit
+          - vente_produit (id_vente_produit) → type: ManyToOne (FK) dans detail
+          - produit_extra (id_produit_extra) → type: ManyToOne (FK) dans detail
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 21 : GESTION DES SOCIÉTÉS (pour publicités)                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Publicité | Sociétés | ... ]                 │
+├────────────────────────────────────────────────────────────────┤
+│                  GESTION DES SOCIÉTÉS                          │
+│                                                                │
+│ [+ Nouvelle Société]                [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom de la Société      │ Actions                    │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Coca-Cola              │ [Modifier] [Diffusions]    │  │
+│ │ 2  │ Nike                   │ [Modifier] [Diffusions]    │  │
+│ │ 3  │ Samsung                │ [Modifier] [Diffusions]    │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: SocieteController
+   - Fonctions:
+     • List<Societe> findAll(String nom, Model model)
+       └─> Location: SocieteController
+     
+     • String createForm(Model model)
+       └─> Location: SocieteController
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: SocieteController
+     
+     • String save(Societe entity)
+       └─> Location: SocieteController
+     
+     • String deleteById(Integer id)
+       └─> Location: SocieteController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: societe
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom
+   3.4.2. Table principale: societe
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 22 : GESTION DES DIFFUSIONS PUBLICITAIRES                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Publicité | Diffusions | ... ]               │
+├────────────────────────────────────────────────────────────────┤
+│              GESTION DES DIFFUSIONS PUBLICITAIRES              │
+│                                                                │
+│ [+ Nouvelle Diffusion]              [Rechercher: _________]   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ ID │ Nom       │ Société   │ Actions                     │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 1  │ Pub été   │ Coca-Cola │ [Modifier] [Programmer]     │  │
+│ │ 2  │ Promo     │ Nike      │ [Modifier] [Programmer]     │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: DiffusionController
+   - Fonctions:
+     • List<Diffusion> findAll(String nom, Model model)
+       └─> Location: DiffusionController
+     
+     • String createForm(Model model)
+       └─> Location: DiffusionController
+     
+     • String editForm(Integer id, Model model)
+       └─> Location: DiffusionController
+     
+     • String save(Diffusion entity)
+       └─> Location: DiffusionController
+     
+     • String deleteById(Integer id)
+       └─> Location: DiffusionController
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: diffusion
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, nom, id_societe
+   3.4.2. Table principale: diffusion
+   3.4.3. Tables annexes:
+          - societe (id_societe) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 23 : PROGRAMMATION DES DIFFUSIONS PUBLICITAIRES             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Publicité | Programmations | ... ]           │
+├────────────────────────────────────────────────────────────────┤
+│         PROGRAMMATION DES DIFFUSIONS PUBLICITAIRES             │
+│                                                                │
+│ [+ Nouvelle Programmation]                                     │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Diffusion │ Vol      │ Date       │ Nb diff │ Actions    │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Pub été   │ PAR→NYC  │ 15/02/2026 │ 5       │ [Modifier] │  │
+│ │ Promo     │ TOK→PAR  │ 16/02/2026 │ 3       │ [Modifier] │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: DiffusionProgrammationController (via DiffusionController)
+   - Fonctions:
+     • List<DiffusionProgrammation> findAll()
+       └─> Location: DiffusionProgrammationService
+     
+     • DiffusionProgrammation save(DiffusionProgrammation entity)
+       └─> Location: DiffusionProgrammationService
+     
+     • void deleteById(Integer id)
+       └─> Location: DiffusionProgrammationService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: diffusion_programmation
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, id_diffusion, id_vol_programmation, 
+                    nombre_diffusions, date_programmation
+   3.4.2. Table principale: diffusion_programmation
+   3.4.3. Tables annexes:
+          - diffusion (id_diffusion) → type: ManyToOne (FK)
+          - vol_programmation (id_vol_programmation) → type: ManyToOne (FK)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 24 : TARIFS DE PUBLICITÉ                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Publicité | Tarifs | ... ]                   │
+├────────────────────────────────────────────────────────────────┤
+│                  TARIFS DE PUBLICITÉ                           │
+│                                                                │
+│ [+ Nouveau Tarif]                                              │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Date application │ Montant (€)   │ Statut  │ Actions     │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 01/01/2026       │ 500.00        │ Archivé │ [Voir]      │  │
+│ │ 01/02/2026       │ 550.00        │ Actif   │ [Modifier]  │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: TarifPubController
+   - Fonctions:
+     • List<TarifPub> findAll(Model model)
+       └─> Location: TarifPubController
+     
+     • String createForm(Model model)
+       └─> Location: TarifPubController
+     
+     • String save(TarifPub entity)
+       └─> Location: TarifPubController
+     
+     • TarifPub getCurrentTarif()
+       └─> Location: TarifPubService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Table principale: tarif_pub
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes: id, montant, date_application
+   3.4.2. Table principale: tarif_pub
+   3.4.3. Tables annexes: Aucune (table simple)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 25 : PAIEMENTS DES DIFFUSIONS PUBLICITAIRES                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Publicité | Paiements | ... ]                │
+├────────────────────────────────────────────────────────────────┤
+│           PAIEMENTS DES DIFFUSIONS PUBLICITAIRES               │
+│                                                                │
+│ Société: [Coca-Cola ▼]                                        │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Diffusion  │ Vol      │ Date prog  │ Montant │ Statut    │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Pub été    │ PAR→NYC  │ 15/02/2026 │ 2750€   │ Payé      │  │
+│ │ Promo      │ TOK→PAR  │ 16/02/2026 │ 1650€   │ En attente│  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ DÉTAILS DU PAIEMENT #1:                                       │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Date paiement    │ Montant payé │ Statut                 │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ 10/02/2026 10:00 │ 1000.00€     │ Partiel                │  │
+│ │ 14/02/2026 15:30 │ 1750.00€     │ Complété               │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: PaymentDiffusionService, PaymentDetailsDiffusionService
+   - Fonctions:
+     • PaymentDiffusion createPayment(Integer societeId, Integer diffProgId)
+       └─> Location: PaymentDiffusionService
+     
+     • PaymentDetailsDiffusion addPaymentDetail(Integer paymentId, BigDecimal montant)
+       └─> Location: PaymentDetailsDiffusionService
+     
+     • List<PaymentDiffusion> findBySociete(Integer societeId)
+       └─> Location: PaymentDiffusionService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Tables principales: payment_diffusion, payment_details_diffusion
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes principales:
+          payment_diffusion: id, id_societe, id_diffusion_programmation
+          payment_details_diffusion: id, id_payment, date_payment, montant
+   3.4.2. Tables principales: payment_diffusion (master), 
+                               payment_details_diffusion (detail)
+   3.4.3. Tables annexes:
+          - societe (id_societe) → type: ManyToOne (FK) dans payment_diffusion
+          - diffusion_programmation (id_diffusion_programmation) → type: ManyToOne (FK)
+          - payment_diffusion (id_payment) → type: ManyToOne (FK) dans details
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 26 : RAPPORT DE CHIFFRE D'AFFAIRES GLOBAL                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Rapports | CA Global | ... ]                 │
+├────────────────────────────────────────────────────────────────┤
+│              RAPPORT DE CHIFFRE D'AFFAIRES GLOBAL              │
+│                                                                │
+│ Période: Mois [02 ▼]  Année [2026 ▼]  [Générer rapport]      │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │                     FÉVRIER 2026                          │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Total Réservations:           125,450.00 €                │  │
+│ │ Total Produits Extras:         12,340.00 €                │  │
+│ │ Total Publicités:              15,500.00 €                │  │
+│ │ ─────────────────────────────────────────                │  │
+│ │ CHIFFRE D'AFFAIRES TOTAL:    153,290.00 €                │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ DÉTAIL PAR VOL:                                               │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Vol        │ Date      │ CA Réservations │ CA Total      │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ PAR→NYC #1 │ 15/02     │ 45,200€         │ 48,500€       │  │
+│ │ TOK→PAR #2 │ 16/02     │ 38,500€         │ 41,800€       │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VolProgrammationController
+   - Fonctions:
+     • String rapportCaGlobal(Integer mois, Integer annee, Model model)
+       └─> Location: VolProgrammationController (ligne ~107)
+     
+     • BigDecimal calculateRevenue(VolProgrammation volProg)
+       └─> Location: VolProgrammationService
+     
+     • Map<String, BigDecimal> getRevenueBreakdown(Integer mois, Integer annee)
+       └─> Location: VolProgrammationService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Vue calculée (agrégation de plusieurs tables)
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes calculées:
+          - total_reservations (SUM depuis reservation + tarif_vol)
+          - total_produits (SUM depuis vente_produit_detail)
+          - total_publicites (SUM depuis payment_details_diffusion)
+   3.4.2. Table/Vue principale: Agrégation personnalisée
+   3.4.3. Tables annexes utilisées:
+          - vol_programmation → type: Base pour le rapport
+          - reservation → type: OneToMany pour calculer CA réservations
+          - tarif_vol → type: ManyToOne pour obtenir les prix
+          - vente_produit_detail → type: Jointure pour CA produits extras
+          - payment_details_diffusion → type: Jointure pour CA publicités
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 27 : RAPPORT MENSUEL DÉTAILLÉ                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Rapports | Mensuel | ... ]                   │
+├────────────────────────────────────────────────────────────────┤
+│                 RAPPORT MENSUEL DÉTAILLÉ                       │
+│                                                                │
+│ Année: [2026 ▼]  [Générer rapport]                            │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Mois      │ Nb Vols │ CA Réserv. │ CA Prod. │ CA Total   │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Janvier   │ 45      │ 234,500€   │ 23,400€  │ 275,900€   │  │
+│ │ Février   │ 52      │ 267,800€   │ 28,100€  │ 311,400€   │  │
+│ │ Mars      │ 48      │ 245,300€   │ 25,600€  │ 286,400€   │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ [Télécharger PDF] [Exporter Excel]                            │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VolProgrammationController
+   - Fonctions:
+     • String rapportMensuel(Integer annee, Model model)
+       └─> Location: VolProgrammationController (ligne ~158)
+     
+     • Map<Integer, Map<String, Object>> getMensuelData(Integer annee)
+       └─> Location: VolProgrammationService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Vue calculée (agrégation mensuelle)
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes calculées par mois:
+          - mois (numéro du mois)
+          - nombre_vols (COUNT de vol_programmation)
+          - ca_reservations (SUM des tarifs)
+          - ca_produits (SUM des ventes)
+          - ca_publicites (SUM des paiements)
+          - ca_total (somme des trois)
+   3.4.2. Table/Vue principale: Agrégation GROUP BY mois
+   3.4.3. Tables annexes:
+          - vol_programmation → type: Base GROUP BY MONTH(date_heure)
+          - reservation + tarif_vol → type: LEFT JOIN pour CA
+          - vente_produit → type: LEFT JOIN pour produits
+          - payment_details_diffusion → type: LEFT JOIN pour publicités
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 28 : DÉTAILS DES REVENUS PAR VOL PROGRAMMÉ                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Vols | Programmations | Détails Revenus]     │
+├────────────────────────────────────────────────────────────────┤
+│           DÉTAILS DES REVENUS - Vol PAR→NYC #1                 │
+│           Date: 15/02/2026 10:00                               │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ RÉSERVATIONS                                              │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Classe       │ Places vendues │ Prix moyen │ Total       │  │
+│ │ Première     │ 15 / 20        │ 2,500€     │ 37,500€     │  │
+│ │ Business     │ 45 / 60        │ 1,200€     │ 54,000€     │  │
+│ │ Économique   │ 180 / 270      │ 450€       │ 81,000€     │  │
+│ │                                  SOUS-TOTAL: 172,500€     │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ PRODUITS EXTRAS                                           │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Produit          │ Quantité vendue │ Total               │  │
+│ │ Repas chaud      │ 150             │ 2,250€              │  │
+│ │ Boissons         │ 200             │ 1,600€              │  │
+│ │                               SOUS-TOTAL: 3,850€          │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ PUBLICITÉS                                                │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Diffusion        │ Société  │ Nb diffusions │ Total      │  │
+│ │ Pub été          │ Coca-Cola│ 5             │ 2,750€     │  │
+│ │                               SOUS-TOTAL: 2,750€          │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ CHIFFRE D'AFFAIRES TOTAL: 179,100.00 €                        │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VolProgrammationController
+   - Fonctions:
+     • String revenusDetails(Integer id, Model model)
+       └─> Location: VolProgrammationController (ligne ~210)
+     
+     • Map<String, Object> getRevenueDetailsForVolProgrammation(Integer id)
+       └─> Location: VolProgrammationService
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Vue calculée (détails pour un vol spécifique)
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes calculées:
+          Pour réservations:
+          - classe, places_vendues, prix_moyen, total_classe
+          Pour produits:
+          - nom_produit, quantite, total_produit
+          Pour publicités:
+          - nom_diffusion, nom_societe, nombre_diffusions, total_pub
+   3.4.2. Table/Vue principale: vol_programmation (WHERE id = ?)
+   3.4.3. Tables annexes:
+          - reservation → type: OneToMany (id_vol_programmation = ?)
+          - tarif_vol → type: JOIN pour calculer prix par classe/passager
+          - vente_produit → type: JOIN via réservations clients
+          - diffusion_programmation → type: OneToMany (id_vol_programmation = ?)
+          - payment_details_diffusion → type: JOIN via diffusion_programmation
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FONCTIONNALITÉ 29 : RECHERCHE ET FILTRAGE DES VOLS DISPONIBLES             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3.1. DESSIN D'ÉCRAN :
+┌────────────────────────────────────────────────────────────────┐
+│ [MENU: Accueil | Vols | Recherche | ... ]                     │
+├────────────────────────────────────────────────────────────────┤
+│                RECHERCHE DE VOLS DISPONIBLES                   │
+│                                                                │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Départ:    [Paris CDG ▼]                                 │  │
+│ │ Arrivée:   [New York JFK ▼]                              │  │
+│ │ Date:      [15/02/2026 📅]                                │  │
+│ │ Passagers: [2 ▼]                                          │  │
+│ │ Classe:    [Toutes ▼]                                     │  │
+│ │                                                           │  │
+│ │ [Rechercher]                                              │  │
+│ └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│ RÉSULTATS:                                                     │
+│ ┌──────────────────────────────────────────────────────────┐  │
+│ │ Vol #1  │ 15/02 10:00 → 15/02 18:30 │ 8h30 │ Dispo: 150  │  │
+│ │ PAR→NYC │ A380                      │      │             │  │
+│ │         │ Éco: 450€ | Bus: 1200€ | 1ère: 2500€          │  │
+│ │         │ [Voir détails] [Réserver]                      │  │
+│ ├──────────────────────────────────────────────────────────┤  │
+│ │ Vol #5  │ 15/02 14:00 → 15/02 22:30 │ 8h30 │ Dispo: 80   │  │
+│ │ PAR→NYC │ B777                      │      │             │  │
+│ │         │ Éco: 480€ | Bus: 1250€                         │  │
+│ │         │ [Voir détails] [Réserver]                      │  │
+│ └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+
+3.2. SIGNATURE DES FONCTIONS :
+   - Classe: VolRestController
+   - Fonctions:
+     • List<Map<String, Object>> searchVolsDisponibles(
+           Integer aeroportDepartId, Integer aeroportArriveeId, 
+           LocalDate date, Integer nbPassagers, Integer classeId)
+       └─> Location: VolRestController / VolService
+     
+     • List<VolProgrammation> getVolProgrammationsByVol(Integer volId)
+       └─> Location: VolRestController (ligne ~22)
+     
+     • Map<String, Object> getTarifsForVolProgrammation(Integer volProgId)
+       └─> Location: VolRestController (ligne ~40)
+
+3.3. VUE OU TABLE UTILISÉE :
+   - Vue calculée avec disponibilités
+
+3.4. POUR LES VUES :
+   3.4.1. Colonnes:
+          - vol.id, vol.id_aeroport_depart, vol.id_aeroport_arrivee, vol.duree
+          - vol_programmation.id, vol_programmation.date_heure, vol_programmation.id_avion
+          - places_disponibles (capacité - places réservées)
+          - tarifs par classe (depuis tarif_vol)
+   3.4.2. Table principale: vol
+   3.4.3. Tables annexes:
+          - aeroport (départ et arrivée) → type: ManyToOne (FK) avec WHERE clause
+          - vol_programmation → type: OneToMany avec WHERE DATE(date_heure) = ?
+          - avion → type: ManyToOne pour capacité totale
+          - reservation → type: OneToMany pour compter places réservées
+          - tarif_vol → type: JOIN pour afficher prix par classe
+          - classe_place → type: JOIN pour déterminer places par classe
+
+
+═══════════════════════════════════════════════════════════════════════════════
+4. RÈGLES DE GESTION IDENTIFIÉES
+═══════════════════════════════════════════════════════════════════════════════
+
+RG01 - Un vol est défini par un aéroport de départ, un aéroport d'arrivée 
+       et une durée en heures.
+
+RG02 - Une programmation de vol doit être associée à un vol existant, 
+       un avion et une date/heure précise.
+
+RG03 - Un avion possède un matricule unique et une capacité totale de places.
+
+RG04 - Les places d'un avion sont réparties en classes (Économique, Business, 
+       Première) via la table classe_place.
+
+RG05 - Chaque classe dans un avion a un intervalle de places défini 
+       (place_debut, place_fin).
+
+RG06 - Un pilote peut être affecté à plusieurs avions à des dates différentes.
+
+RG07 - Un avion peut avoir plusieurs pilotes affectés à des dates différentes.
+
+RG08 - Un vol programmé peut avoir plusieurs statuts au cours du temps 
+       (Prévu, Confirmé, En cours, Atterri, Annulé).
+
+RG09 - Le statut actuel d'un vol programmé est le dernier enregistré 
+       dans l'historique.
+
+RG10 - Une réservation est faite par un client pour un vol programmé spécifique.
+
+RG11 - Une réservation peut contenir plusieurs places (nombre_places).
+
+RG12 - Chaque place réservée doit avoir un type de passager 
+       (Adulte, Enfant, Bébé, Senior).
+
+RG13 - Le tarif d'une place dépend de : vol programmé, classe et type de passager.
+
+RG14 - Des remises tarifaires peuvent être appliquées selon le type de passager.
+
+RG15 - Une remise peut être en pourcentage (%) ou en valeur fixe (-).
+
+RG16 - Une remise tarifaire est calculée par rapport à un type de passager 
+       de référence (ex: Enfant -30% par rapport à Adulte).
+
+RG17 - Une réservation peut changer de statut (En attente, Confirmée, 
+       Payée, Annulée).
+
+RG18 - L'historique de réservation garde la trace de tous les changements 
+       de statut.
+
+RG19 - Des produits extras (repas, boissons, etc.) peuvent être vendus 
+       aux clients.
+
+RG20 - Un produit extra peut avoir plusieurs tarifs dans le temps.
+
+RG21 - Le tarif actuel d'un produit est celui avec la date d'application 
+       la plus récente.
+
+RG22 - Une vente de produits est associée à un client et contient plusieurs 
+       détails (produit, quantité, prix unitaire).
+
+RG23 - Des sociétés externes peuvent acheter des espaces publicitaires 
+       (diffusions).
+
+RG24 - Une diffusion publicitaire appartient à une société et peut être 
+       programmée sur plusieurs vols.
+
+RG25 - Une programmation de diffusion précise le nombre de diffusions 
+       pour un vol donné.
+
+RG26 - Les tarifs de publicité varient dans le temps (table tarif_pub).
+
+RG27 - Le paiement d'une diffusion peut être effectué en plusieurs fois 
+       (payment_details_diffusion).
+
+RG28 - Le chiffre d'affaires total d'un vol programmé = CA réservations + 
+       CA produits extras + CA publicités.
+
+RG29 - Le nombre de places disponibles pour un vol = capacité avion - 
+       places déjà réservées.
+
+RG30 - Un client ne peut pas réserver une place déjà occupée sur le même vol.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+5. SYNTHÈSE DES VUES ET REQUÊTES COMPLEXES
+═══════════════════════════════════════════════════════════════════════════════
+
+VUE 1 : Places disponibles par vol programmé
+─────────────────────────────────────────────
+SELECT 
+    vp.id,
+    vp.date_heure,
+    v.id_aeroport_depart,
+    v.id_aeroport_arrivee,
+    av.capacite,
+    COALESCE(SUM(r.nombre_places), 0) as places_reservees,
+    (av.capacite - COALESCE(SUM(r.nombre_places), 0)) as places_disponibles
+FROM vol_programmation vp
+INNER JOIN vol v ON vp.id_vol = v.id
+INNER JOIN avion av ON vp.id_avion = av.id
+LEFT JOIN reservation r ON vp.id = r.id_vol_programmation
+GROUP BY vp.id, vp.date_heure, v.id_aeroport_depart, 
+         v.id_aeroport_arrivee, av.capacite;
+
+VUE 2 : Chiffre d'affaires par vol programmé
+─────────────────────────────────────────────
+SELECT 
+    vp.id,
+    vp.date_heure,
+    COALESCE(SUM(tv.tarif), 0) as ca_reservations,
+    -- CA produits et publicités nécessitent des jointures supplémentaires
+FROM vol_programmation vp
+LEFT JOIN reservation r ON vp.id = r.id_vol_programmation
+LEFT JOIN reservation_place rp ON r.id = rp.id_reservation
+LEFT JOIN tarif_vol tv ON vp.id = tv.id_vol_programmation 
+    AND rp.id_type_passager = tv.id_type_passager
+GROUP BY vp.id, vp.date_heure;
+
+VUE 3 : Statut actuel des vols programmés
+──────────────────────────────────────────
+SELECT 
+    vp.id,
+    vps_latest.id_statut,
+    sv.nom as statut_nom,
+    vps_latest.date
+FROM vol_programmation vp
+LEFT JOIN (
+    SELECT id_vol_programmation, MAX(date) as max_date
+    FROM vol_programmation_statut
+    GROUP BY id_vol_programmation
+) latest ON vp.id = latest.id_vol_programmation
+LEFT JOIN vol_programmation_statut vps_latest 
+    ON latest.id_vol_programmation = vps_latest.id_vol_programmation
+    AND latest.max_date = vps_latest.date
+LEFT JOIN statut_vol sv ON vps_latest.id_statut = sv.id;
+
+VUE 4 : Tarif actuel des produits extras
+─────────────────────────────────────────
+SELECT 
+    pe.id,
+    pe.nom,
+    tpe.prix,
+    tpe.date_application
+FROM produit_extra pe
+LEFT JOIN (
+    SELECT id_produit_extra, MAX(date_application) as max_date
+    FROM tarif_produit_extra
+    WHERE date_application <= CURRENT_DATE
+    GROUP BY id_produit_extra
+) latest ON pe.id = latest.id_produit_extra
+LEFT JOIN tarif_produit_extra tpe 
+    ON latest.id_produit_extra = tpe.id_produit_extra
+    AND latest.max_date = tpe.date_application;
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                            FIN DU DOCUMENT
+═══════════════════════════════════════════════════════════════════════════════
+
+Ce document a été généré automatiquement à partir de l'analyse complète du 
+projet Compagnie Aérienne.
+
+Date de génération: 30 Janvier 2026
+Nombre total d'entités: 29
+Nombre total de fonctionnalités: 29
+Nombre total de relations: 40+
+
+Pour toute question ou clarification, consulter:
+- Le code source dans src/main/java/com/companieaerienne/
+- La base de données PostgreSQL: compagnieAerienne
+- Le fichier README.md du projet
